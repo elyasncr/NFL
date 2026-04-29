@@ -143,7 +143,7 @@ export default function Tribune() {
           <ErrorState onRetry={() => teamsQuery.refetch()} />
         )}
         {teams && bestOff && bestDef && surprise && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
             <ChampionCard variant="attack"      abbr={bestOff.team}    epaValue={bestOff.off_epa} />
             <ChampionCard variant="defense"     abbr={bestDef.team}    epaValue={bestDef.def_epa} />
             <ChampionCard variant="qb-trouble"  abbr={teamsInfo?.[0]?.abbr ?? 'NYJ'} epaValue={0}
@@ -168,7 +168,7 @@ export default function Tribune() {
         }}>
           Capítulos
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+        <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
           <ChapterCard
             to="/dashboard"
             icon={Activity}

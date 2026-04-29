@@ -106,6 +106,7 @@ export default function TribuneChatWidget() {
       role="dialog"
       aria-modal="true"
       aria-label="Chat Tribune AI"
+      className="tribune-widget-open"
       style={{
         position: 'fixed', right: '24px', bottom: '24px',
         width: '380px', height: '520px',

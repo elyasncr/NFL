@@ -225,3 +225,35 @@ input:focus, select:focus, textarea:focus {
 main > * {
   animation: pageFadeIn 0.2s ease-out;
 }
+
+/* ── Mobile (≤ 768px) ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  html { font-size: 15px; }
+
+  main { padding: 72px 16px 32px !important; }
+
+  /* Grids 2-col viram 1-col */
+  .mobile-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  h1 { font-size: 1.8rem !important; }
+  h2 { font-size: 1rem !important; }
+
+  /* Tribune Hero responsivo */
+  .tribune-hero {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+  .tribune-hero img { width: 96px !important; height: 96px !important; }
+  .tribune-hero h1 { font-size: 1.6rem !important; }
+
+  /* Widget full-screen em mobile aberto */
+  .tribune-widget-open {
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+}

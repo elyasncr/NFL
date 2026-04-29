@@ -206,7 +206,7 @@ export default function Dashboard() {
           }}>
             Os Melhores da Temporada
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <ChampionCard variant="attack"  abbr={bestOffense.team} epaValue={bestOffense.off_epa} />
             <ChampionCard variant="defense" abbr={bestDefense.team} epaValue={bestDefense.def_epa} />
           </div>
@@ -239,7 +239,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── 4. Ranking + Quarterback ──────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }}>
+      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }}>
 
         {/* Ranking */}
         <div className="card">

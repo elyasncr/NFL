@@ -33,7 +33,7 @@ export default function TribuneHero({
   )
 
   return (
-    <div style={{
+    <div className="tribune-hero" style={{
       background: '#0d1419',
       color: '#fff',
       borderRadius: 'var(--radius-lg)',

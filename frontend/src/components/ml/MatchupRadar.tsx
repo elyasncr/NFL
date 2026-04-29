@@ -451,7 +451,7 @@ export default function MatchupRadar() {
               Lembrando: ataque positivo = bom; defesa negativa = boa.
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <DuelCard
               attackTeam={homeTeam}
               attackEpa={data.home_stats.off_epa ?? 0}
