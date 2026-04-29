@@ -1,0 +1,166 @@
+/* ─── Design System — NFL Analytics Lab ───────────────────────
+   Estética: Terminal de Dados + Campo de Futebol Americano
+   Fontes: Barlow Condensed (display) + Space Mono (dados)
+   Paleta: Verde campo + preto profundo + branco ofensivo
+─────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Cores principais */
+  --bg-void: #060810;
+  --bg-field: #0b0f1a;
+  --bg-card: #0f1525;
+  --bg-card-hover: #141c30;
+  --bg-line: #1a2540;
+
+  /* Acentos */
+  --green-field: #00e676;
+  --green-dim: #00c853;
+  --green-glow: rgba(0, 230, 118, 0.15);
+  --red-alert: #ff1744;
+  --red-glow: rgba(255, 23, 68, 0.15);
+  --amber-warn: #ffab00;
+  --amber-glow: rgba(255, 171, 0, 0.12);
+  --blue-data: #448aff;
+  --purple-ai: #d500f9;
+
+  /* Texto */
+  --text-primary: #e8f0fe;
+  --text-secondary: #8899bb;
+  --text-muted: #445577;
+  --text-data: #00e676;
+
+  /* Bordas */
+  --border: rgba(0, 230, 118, 0.12);
+  --border-active: rgba(0, 230, 118, 0.4);
+
+  /* Tipografia */
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  /* Espaçamento */
+  --radius: 4px;
+  --radius-lg: 8px;
+}
+
+/* ── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-mono);
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-void); }
+::-webkit-scrollbar-thumb { background: var(--bg-line); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-dim); }
+
+/* ── Utilitários ────────────────────────────────────────── */
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+.text-green { color: var(--green-field); }
+.text-red { color: var(--red-alert); }
+.text-amber { color: var(--amber-warn); }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+
+/* ── Card base ──────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.card:hover {
+  border-color: var(--border-active);
+  background: var(--bg-card-hover);
+}
+
+/* ── Badge ──────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.badge-green { background: var(--green-glow); color: var(--green-field); border: 1px solid var(--green-field); }
+.badge-red { background: var(--red-glow); color: var(--red-alert); border: 1px solid var(--red-alert); }
+.badge-amber { background: var(--amber-glow); color: var(--amber-warn); border: 1px solid var(--amber-warn); }
+.badge-blue { background: rgba(68,138,255,0.12); color: var(--blue-data); border: 1px solid var(--blue-data); }
+
+/* ── Button ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--green-field);
+  color: var(--bg-void);
+}
+.btn-primary:hover { background: var(--green-dim); transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--border-active); color: var(--text-primary); }
+
+/* ── Loading ────────────────────────────────────────────── */
+.loading-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green-field);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* ── Scanline effect (sutil) ────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}

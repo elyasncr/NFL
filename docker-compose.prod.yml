@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────
+#  NFL Analytics Lab — Docker Compose (PRODUÇÃO)
+#  Use: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+#  Diferenças do dev:
+#  - Frontend: build estático servido pelo Nginx
+#  - Backend: sem hot reload, sem volume de código
+#  - Nginx: proxy reverso unificando tudo na porta 80
+# ─────────────────────────────────────────────────────────────────
+version: '3.8'
+
+services:
+
+  backend:
+    volumes:
+      - nfl_data_cache:/app/data_cache
+      - nfl_models:/app/models
+      - nfl_chroma:/app/chroma_db
+      # Remove o mount do código fonte (sem hot reload em prod)
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile         # Build de produção (nginx)
+    ports: []                        # Não expõe diretamente
+    volumes: []                      # Sem mount de código
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    container_name: nfl_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: always

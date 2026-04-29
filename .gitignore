@@ -1,0 +1,25 @@
+# Dados e modelos (muito grandes para o git)
+backend/data_cache/
+backend/models/*.pkl
+backend/chroma_db/
+
+# Env
+.env
+
+# Docker
+.dockerignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
