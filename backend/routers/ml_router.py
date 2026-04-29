@@ -3,12 +3,17 @@ Módulo 1 — Endpoints de Machine Learning
 ==========================================
 Todos os endpoints do módulo de ML clássico.
 """
+import logging
+
+import pandas as pd
 from fastapi import APIRouter, HTTPException
 from data.loader import get_pbp_data
 from ml.features import get_qb_hot_seat, get_qb_cpoe_stats, calculate_player_props
 from ml.predictor import predict_matchup, get_all_teams_ranking, get_team_stats, load_model_metrics
 from ml.teams_info import get_teams_info
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
@@ -128,7 +133,12 @@ def get_playoffs(season: int):
     """
     from data.loader import get_schedules
 
-    schedules = get_schedules([season])
+    try:
+        schedules = get_schedules([season])
+    except ValueError as exc:
+        logger.warning("get_schedules raised ValueError for season %s: %s", season, exc)
+        return []
+
     post = schedules[
         (schedules["season"] == season) &
         (schedules["game_type"].isin(["WC", "DIV", "CON", "SB"]))
@@ -144,8 +154,8 @@ def get_playoffs(season: int):
             "round": round_map.get(row["game_type"], row["game_type"]),
             "home": row["home_team"],
             "away": row["away_team"],
-            "home_score": int(row["home_score"]) if row["home_score"] is not None else None,
-            "away_score": int(row["away_score"]) if row["away_score"] is not None else None,
+            "home_score": int(row["home_score"]) if pd.notna(row["home_score"]) else None,
+            "away_score": int(row["away_score"]) if pd.notna(row["away_score"]) else None,
             "date": str(row["gameday"])[:10],
         })
 
