@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
+import Tribune from './pages/Tribune'
 import Dashboard from './pages/Dashboard'
 import Matchup from './pages/Matchup'
 import Encyclopedia from './pages/Encyclopedia'
@@ -13,7 +14,8 @@ export default function App() {
       <Navbar />
       <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '80px 24px 48px' }}>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Tribune />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/matchup" element={<Matchup />} />
           <Route path="/encyclopedia" element={<Encyclopedia />} />
           <Route path="/chat" element={<Chat />} />
