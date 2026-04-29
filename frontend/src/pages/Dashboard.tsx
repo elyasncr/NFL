@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts'
 import { Bot } from 'lucide-react'
-import { nflApi } from '../api/nflApi'
+import { nflApi, PlayoffGame } from '../api/nflApi'
 import HotSeat from '../components/ml/HotSeat'
-import { useTeamsInfo, normalizeAbbr } from '../hooks/useTeamInfo'
+import { useTeamsInfo, normalizeAbbr, useTeam } from '../hooks/useTeamInfo'
 import ChampionCard from '../components/team/ChampionCard'
+import Skeleton from '../components/ui/Skeleton'
+import ErrorState from '../components/ui/ErrorState'
 
 const TeamYTick = ({ x, y, payload, teamsInfo, positions }: any) => {
   const team = teamsInfo?.find((t: any) => t.abbr === normalizeAbbr(payload.value))
@@ -78,19 +81,68 @@ function StatPill({ label, value, hint }: { label: string; value: string; hint?:
   )
 }
 
+function HeadlineStrip({ championAbbr }: { championAbbr: string | null }) {
+  const team = useTeam(championAbbr ?? undefined)
+  if (!team) return null
+  return (
+    <div style={{
+      background: '#0d1419',
+      borderRadius: 'var(--radius-lg)',
+      padding: '14px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+      color: '#fff',
+    }}>
+      <img src={team.logo} alt={team.abbr}
+           style={{
+             width: '40px', height: '40px', objectFit: 'contain',
+             filter: `drop-shadow(0 0 8px ${team.color}aa)`, flexShrink: 0,
+           }} />
+      <div style={{
+        background: team.color, padding: '3px 8px', borderRadius: '2px',
+        fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 700,
+        letterSpacing: '0.12em', textTransform: 'uppercase', flexShrink: 0,
+      }}>
+        🏆 SUPER BOWL LX
+      </div>
+      <div style={{ flex: 1, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', letterSpacing: '0.04em' }}>
+        {team.city} {team.nick} encerram a temporada como campeões.
+      </div>
+      <Link to="/" style={{
+        fontFamily: 'var(--font-mono)', fontSize: '0.7rem',
+        color: 'rgba(255,255,255,0.7)', textDecoration: 'none',
+        whiteSpace: 'nowrap', flexShrink: 0,
+      }}>
+        Ler edição completa →
+      </Link>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const [hotSeatTeam, setHotSeatTeam] = useState('KC')
   const [sortBy, setSortBy] = useState<'off_epa' | 'def_epa'>('off_epa')
 
-  const { data: teams, isLoading } = useQuery({
+  const teamsQuery = useQuery({
     queryKey: ['teams'],
     queryFn: nflApi.getAllTeams,
   })
+  const teams = teamsQuery.data
 
   const { data: modelInfo } = useQuery({
     queryKey: ['model-info'],
     queryFn: nflApi.getModelInfo,
   })
+
+  const playoffsQuery = useQuery({
+    queryKey: ['playoffs', 2025],
+    queryFn: () => nflApi.getPlayoffs(2025),
+  })
+  const sbGame: PlayoffGame | undefined = playoffsQuery.data?.find(g => g.round === 'SB')
+  const championAbbr = sbGame
+    ? ((sbGame.home_score ?? 0) > (sbGame.away_score ?? 0) ? sbGame.home : sbGame.away)
+    : null
 
   const { data: teamsInfo } = useTeamsInfo()
 
@@ -115,6 +167,8 @@ export default function Dashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+      <HeadlineStrip championAbbr={championAbbr} />
 
       {/* ── 1. Header ─────────────────────────────────────────── */}
       <div>
@@ -219,10 +273,13 @@ export default function Dashboard() {
             }
           </p>
 
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
-              <span className="loading-dot" /> Carregando dados da NFL...
+          {teamsQuery.isLoading ? (
+            <div>
+              <Skeleton variant="line" width="60%" />
+              <Skeleton variant="line" count={10} style={{ marginTop: '8px' }} />
             </div>
+          ) : teamsQuery.isError ? (
+            <ErrorState onRetry={() => teamsQuery.refetch()} />
           ) : (
             <ResponsiveContainer width="100%" height={420}>
               <BarChart data={sortedTeams} layout="vertical" margin={{ left: 10, right: 24 }}>
@@ -311,7 +368,7 @@ export default function Dashboard() {
               <strong style={{ color: 'var(--green-field)' }}>
                 {(modelInfo.accuracy * 100).toFixed(1)}%
               </strong>
-              {' '}das partidas. Use a aba <strong style={{ color: 'var(--blue-data)' }}>Matchup</strong> para ver previsões.
+              {' '}das partidas. Use a aba <strong style={{ color: 'var(--blue-data)' }}>Confronto</strong> ou faça uma pergunta rápida no <strong>💬 canto inferior direito</strong>.
             </p>
           </div>
           <details style={{ flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
