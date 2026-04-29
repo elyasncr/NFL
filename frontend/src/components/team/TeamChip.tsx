@@ -57,6 +57,7 @@ export default function TeamChip({ abbr, active = false, onClick, variant = 'com
       <img
         src={team.logo}
         alt={team.abbr}
+        loading="lazy"
         style={{ width: '20px', height: '20px', objectFit: 'contain', flexShrink: 0 }}
         onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
       />

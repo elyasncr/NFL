@@ -36,6 +36,7 @@ function GameCell({ game }: { game: PlayoffGame }) {
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {side.team && (
               <img src={side.team.logo} alt={side.team.abbr}
+                   loading="lazy"
                    style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
             )}
             {side.team?.abbr ?? '???'}

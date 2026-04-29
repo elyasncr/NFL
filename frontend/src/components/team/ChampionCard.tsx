@@ -99,6 +99,7 @@ export default function ChampionCard({ variant, abbr, epaValue, description, met
         <img
           src={team.logo}
           alt={team.abbr}
+          loading="lazy"
           style={{
             width: '80px', height: '80px', objectFit: 'contain',
             filter: `drop-shadow(0 0 12px ${team.color}80)`,

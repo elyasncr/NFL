@@ -61,6 +61,7 @@ export default function TribuneHero({
         <img
           src={champ.logo}
           alt={champ.abbr}
+          loading="lazy"
           style={{
             width: '160px', height: '160px', objectFit: 'contain',
             filter: `drop-shadow(0 0 24px ${champ.color}aa)`,

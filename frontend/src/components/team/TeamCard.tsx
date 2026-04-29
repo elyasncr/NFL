@@ -68,6 +68,7 @@ export default function TeamCard({ abbr, label, metric }: Props) {
         <img
           src={team.logo}
           alt={team.abbr}
+          loading="lazy"
           style={{
             width: '54px', height: '54px', objectFit: 'contain',
             filter: `drop-shadow(0 0 8px ${team.color}80)`,

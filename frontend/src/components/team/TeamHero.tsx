@@ -29,6 +29,7 @@ function HeroSide({ abbr, side, colorOverride }: HeroSideProps) {
       <img
         src={team.logo}
         alt={team.abbr}
+        loading="lazy"
         style={{
           width: '110px', height: '110px', objectFit: 'contain',
           filter: `drop-shadow(0 0 16px ${primary}99)`,
