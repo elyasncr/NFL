@@ -208,3 +208,11 @@ input:focus, select:focus, textarea:focus {
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: var(--radius);
 }
+
+.hide-on-mobile { display: inherit; }
+.show-on-mobile { display: none; }
+
+@media (max-width: 768px) {
+  .hide-on-mobile { display: none !important; }
+  .show-on-mobile { display: inherit !important; }
+}

@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
-import { Home, Activity, Swords, BookOpen, Bot, Eye } from 'lucide-react'
+import { Home, Activity, Swords, BookOpen, Bot, Eye, Menu } from 'lucide-react'
+import MobileDrawer from './MobileDrawer'
 
 const navItems = [
   { to: '/',             icon: Home,     label: 'Início',       color: 'var(--green-field)' },
@@ -13,6 +14,7 @@ const navItems = [
 
 export default function Navbar() {
   const [showTagline, setShowTagline] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
     <nav style={{
@@ -45,7 +47,7 @@ export default function Navbar() {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '2px', flex: 1 }}>
+      <div className="hide-on-mobile" style={{ display: 'flex', gap: '2px', flex: 1 }}>
         {navItems.map(({ to, icon: Icon, label, color }) => (
           <NavLink key={to} to={to} end={to === '/'}
             style={({ isActive }) => ({
@@ -63,7 +65,25 @@ export default function Navbar() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+      <button
+        className="show-on-mobile"
+        onClick={() => setDrawerOpen(true)}
+        aria-label="Abrir menu"
+        style={{
+          background: 'transparent', border: 'none',
+          cursor: 'pointer', color: 'var(--text-secondary)',
+          marginLeft: 'auto',
+        }}
+      >
+        <Menu size={22} />
+      </button>
+      <MobileDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        items={navItems}
+      />
+
+      <div className="hide-on-mobile" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
         <span className="loading-dot" />API ONLINE
       </div>
     </nav>
