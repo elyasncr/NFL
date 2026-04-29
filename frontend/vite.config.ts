@@ -15,11 +15,12 @@ export default defineConfig({
       clientPort: 5173,  // Porta que o browser usa para o WebSocket do HMR
     },
     proxy: {
-      '/ml':     { target: 'http://backend:8000', changeOrigin: true },
-      '/rag':    { target: 'http://backend:8000', changeOrigin: true },
-      '/agent':  { target: 'http://backend:8000', changeOrigin: true },
-      '/vision': { target: 'http://backend:8000', changeOrigin: true },
-      '/health': { target: 'http://backend:8000', changeOrigin: true },
+      // Barra final pra não interceptar rotas do React Router (ex: GET /agent vai pra index.html)
+      '/ml/':     { target: 'http://backend:8000', changeOrigin: true },
+      '/rag/':    { target: 'http://backend:8000', changeOrigin: true },
+      '/agent/':  { target: 'http://backend:8000', changeOrigin: true },
+      '/vision/': { target: 'http://backend:8000', changeOrigin: true },
+      '/health':  { target: 'http://backend:8000', changeOrigin: true },
     }
   }
 })
