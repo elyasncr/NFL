@@ -78,7 +78,7 @@ export default function TeamCard({ abbr, label, metric }: Props) {
         <div>
           <div style={{
             fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.6rem',
-            lineHeight: 1, color: '#ffffff', letterSpacing: '0.02em', textTransform: 'uppercase',
+            lineHeight: 1, color: 'var(--text-primary)', letterSpacing: '0.02em', textTransform: 'uppercase',
           }}>
             {team.city}
           </div>

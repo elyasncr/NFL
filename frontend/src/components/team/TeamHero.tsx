@@ -3,9 +3,11 @@ import { useTeam } from '../../hooks/useTeamInfo'
 interface HeroSideProps {
   abbr: string
   side: 'home' | 'away'
+  /** Override de cor primária (ex: matchup que resolveu conflito home vs away) */
+  colorOverride?: string
 }
 
-function HeroSide({ abbr, side }: HeroSideProps) {
+function HeroSide({ abbr, side, colorOverride }: HeroSideProps) {
   const team = useTeam(abbr)
   if (!team) {
     return (
@@ -16,6 +18,8 @@ function HeroSide({ abbr, side }: HeroSideProps) {
   }
 
   const sideLabel = side === 'home' ? 'CASA' : 'VISITANTE'
+  const primary = colorOverride ?? team.color
+  const accent = colorOverride && colorOverride !== team.color ? primary : team.color2
 
   return (
     <div style={{
@@ -27,29 +31,29 @@ function HeroSide({ abbr, side }: HeroSideProps) {
         alt={team.abbr}
         style={{
           width: '110px', height: '110px', objectFit: 'contain',
-          filter: `drop-shadow(0 0 16px ${team.color}99)`,
+          filter: `drop-shadow(0 0 16px ${primary}99)`,
         }}
         onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
       />
       <div style={{
         fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem',
-        color: '#ffffff', letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1,
+        color: 'var(--text-primary)', letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1,
       }}>
         {team.city}
       </div>
       <div style={{
         fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem',
-        color: team.color2, letterSpacing: '0.06em', textTransform: 'uppercase',
+        color: accent, letterSpacing: '0.06em', textTransform: 'uppercase',
       }}>
         {team.nick}
       </div>
       <div style={{
         marginTop: '4px', padding: '2px 8px',
-        background: `${team.color}33`,
-        border: `1px solid ${team.color}66`,
+        background: `${primary}33`,
+        border: `1px solid ${primary}66`,
         borderRadius: '2px',
         fontFamily: 'var(--font-mono)', fontSize: '0.55rem',
-        color: team.color2, letterSpacing: '0.08em', textTransform: 'uppercase',
+        color: accent, letterSpacing: '0.08em', textTransform: 'uppercase',
       }}>
         {sideLabel} · {team.division}
       </div>
@@ -63,13 +67,24 @@ interface Props {
   /** Texto opcional pro centro (ex: "79.1% / 20.9%") */
   centerText?: string
   centerLabel?: string
+  /** Override da cor home (default: team.color) */
+  homeColor?: string
+  /** Override da cor away — útil quando home e away têm cores parecidas */
+  awayColor?: string
 }
 
-export default function TeamHero({ homeAbbr, awayAbbr, centerText, centerLabel }: Props) {
+export default function TeamHero({
+  homeAbbr,
+  awayAbbr,
+  centerText,
+  centerLabel,
+  homeColor: homeColorProp,
+  awayColor: awayColorProp,
+}: Props) {
   const home = useTeam(homeAbbr)
   const away = useTeam(awayAbbr)
-  const homeColor = home?.color ?? '#888888'
-  const awayColor = away?.color ?? '#888888'
+  const homeColor = homeColorProp ?? home?.color ?? '#888888'
+  const awayColor = awayColorProp ?? away?.color ?? '#888888'
 
   return (
     <div style={{
@@ -98,7 +113,7 @@ export default function TeamHero({ homeAbbr, awayAbbr, centerText, centerLabel }
         pointerEvents: 'none',
       }} />
 
-      <HeroSide abbr={homeAbbr} side="home" />
+      <HeroSide abbr={homeAbbr} side="home" colorOverride={homeColor} />
 
       {/* Centro */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', position: 'relative' }}>
@@ -126,7 +141,7 @@ export default function TeamHero({ homeAbbr, awayAbbr, centerText, centerLabel }
         )}
       </div>
 
-      <HeroSide abbr={awayAbbr} side="away" />
+      <HeroSide abbr={awayAbbr} side="away" colorOverride={awayColor} />
     </div>
   )
 }

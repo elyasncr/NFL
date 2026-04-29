@@ -42,7 +42,7 @@ export default function TeamChip({ abbr, active = false, onClick, variant = 'com
         background: active ? `${team.color}22` : 'transparent',
         borderRadius: '2px',
         fontFamily: 'var(--font-mono)', fontSize: '0.7rem',
-        color: active ? '#ffffff' : 'var(--text-secondary)',
+        color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
         fontWeight: 700,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.15s',

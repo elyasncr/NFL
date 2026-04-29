@@ -11,6 +11,7 @@ import { useTeam, useTeamsInfo } from '../../hooks/useTeamInfo'
 import { pickAwayColor } from '../../utils/teamColors'
 import Skeleton from '../ui/Skeleton'
 import ErrorState from '../ui/ErrorState'
+import Abbr from '../ui/Abbr'
 
 const NFL_TEAMS = [
   'ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE',
@@ -181,7 +182,7 @@ function DuelCard({ attackTeam, attackEpa, attackColor, defenseTeam, defenseEpa,
             textTransform: 'uppercase',
             marginTop: '2px',
           }}>
-            {attackTeam} OFF EPA
+            {attackTeam} <Abbr term="Off EPA">OFF EPA</Abbr>
           </div>
         </div>
 
@@ -212,7 +213,7 @@ function DuelCard({ attackTeam, attackEpa, attackColor, defenseTeam, defenseEpa,
             textTransform: 'uppercase',
             marginTop: '2px',
           }}>
-            {defenseTeam} DEF EPA
+            {defenseTeam} <Abbr term="Def EPA">DEF EPA</Abbr>
           </div>
         </div>
       </div>

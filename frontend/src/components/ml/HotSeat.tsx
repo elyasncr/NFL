@@ -5,6 +5,7 @@ import TeamChip from '../team/TeamChip'
 import { useTeam, useTeamsInfo } from '../../hooks/useTeamInfo'
 import Skeleton from '../ui/Skeleton'
 import ErrorState from '../ui/ErrorState'
+import Abbr from '../ui/Abbr'
 
 const NFL_TEAMS = [
   'ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE',
@@ -232,7 +233,7 @@ export default function HotSeat({ team, onTeamChange }: Props) {
             }}>
               <div style={{ background: 'var(--bg-field)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  CPOE
+                  <Abbr term="CPOE">CPOE</Abbr>
                 </div>
                 <div style={{
                   fontFamily: 'var(--font-display)',

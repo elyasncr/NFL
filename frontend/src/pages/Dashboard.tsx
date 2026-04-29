@@ -9,6 +9,7 @@ import { useTeamsInfo, normalizeAbbr, useTeam } from '../hooks/useTeamInfo'
 import ChampionCard from '../components/team/ChampionCard'
 import Skeleton from '../components/ui/Skeleton'
 import ErrorState from '../components/ui/ErrorState'
+import Abbr from '../components/ui/Abbr'
 
 const TeamYTick = ({ x, y, payload, teamsInfo, positions }: any) => {
   const team = teamsInfo?.find((t: any) => t.abbr === normalizeAbbr(payload.value))
@@ -376,11 +377,13 @@ export default function Dashboard() {
             <div style={{ marginTop: '10px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Acurácia', value: `${(modelInfo.accuracy * 100).toFixed(1)}%`, hint: '% de jogos com vencedor previsto correto' },
-                { label: 'ROC-AUC', value: modelInfo.roc_auc?.toFixed(3) ?? '—', hint: 'Qualidade do ranking de probabilidades (1 = perfeito, 0.5 = aleatório)' },
+                { label: 'ROC-AUC', value: modelInfo.roc_auc?.toFixed(3) ?? '—', hint: 'Qualidade do ranking de probabilidades (1 = perfeito, 0.5 = aleatório)', abbr: 'ROC-AUC' as const },
                 { label: 'CV ROC-AUC', value: `${modelInfo.cv_roc_auc_mean?.toFixed(3)} ± ${modelInfo.cv_roc_auc_std?.toFixed(3)}`, hint: 'ROC-AUC médio em validação cruzada (5-fold)' },
-              ].map(({ label, value, hint }) => (
+              ].map(({ label, value, hint, abbr }) => (
                 <div key={label} title={hint}>
-                  <div style={{ fontSize: '0.58rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</div>
+                  <div style={{ fontSize: '0.58rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {abbr ? <Abbr term={abbr}>{label}</Abbr> : label}
+                  </div>
                   <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)', marginTop: '2px' }}>{value}</div>
                 </div>
               ))}
