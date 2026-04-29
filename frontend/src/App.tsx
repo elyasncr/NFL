@@ -4,9 +4,9 @@ import Tribune from './pages/Tribune'
 import Dashboard from './pages/Dashboard'
 import Matchup from './pages/Matchup'
 import Encyclopedia from './pages/Encyclopedia'
-import Chat from './pages/Chat'
 import Agent from './pages/Agent'
 import Vision from './pages/Vision'
+import TribuneChatWidget from './components/chat/TribuneChatWidget'
 
 export default function App() {
   return (
@@ -18,11 +18,11 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/matchup" element={<Matchup />} />
           <Route path="/encyclopedia" element={<Encyclopedia />} />
-          <Route path="/chat" element={<Chat />} />
           <Route path="/agent" element={<Agent />} />
           <Route path="/vision" element={<Vision />} />
         </Routes>
       </main>
+      <TribuneChatWidget />
     </div>
   )
 }
