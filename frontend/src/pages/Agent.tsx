@@ -55,7 +55,8 @@ function StepCard({ step }: { step: AgentStep }) {
         <div style={{
           marginTop: '6px',
           padding: '8px 12px',
-          background: 'rgba(0,0,0,0.3)',
+          background: 'var(--bg-field)',
+          border: '1px solid var(--border)',
           borderRadius: 'var(--radius)',
           fontFamily: 'var(--font-mono)',
           fontSize: '0.68rem',
@@ -71,7 +72,7 @@ function StepCard({ step }: { step: AgentStep }) {
         <div style={{
           marginTop: '4px',
           padding: '6px 10px',
-          background: 'rgba(255,171,0,0.05)',
+          background: 'var(--amber-glow)',
           borderRadius: 'var(--radius)',
           fontFamily: 'var(--font-mono)',
           fontSize: '0.65rem',
@@ -132,7 +133,7 @@ export default function Agent() {
           AI Agent <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ ReAct + Tools</span>
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          O agente decide quais ferramentas usar · ML + RAG + Stats em tempo real · Ollama llama3
+          Esta IA tem acesso a estatísticas ao vivo. Ela decide quais dados buscar pra responder você.
         </p>
       </div>
 
@@ -144,8 +145,8 @@ export default function Agent() {
             alignItems: 'center',
             gap: '4px',
             padding: '3px 10px',
-            background: 'rgba(213,0,249,0.05)',
-            border: '1px solid rgba(213,0,249,0.2)',
+            background: 'var(--purple-glow)',
+            border: '1px solid var(--purple-ai)',
             borderRadius: '2px',
             fontFamily: 'var(--font-mono)',
             fontSize: '0.62rem',
@@ -193,8 +194,8 @@ export default function Agent() {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <div style={{
                 padding: '12px 16px',
-                background: 'rgba(0,230,118,0.08)',
-                border: '1px solid var(--border-active)',
+                background: 'var(--green-glow)',
+                border: '1px solid var(--green-field)',
                 borderRadius: '12px 12px 2px 12px',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '0.82rem',
@@ -246,7 +247,8 @@ export default function Agent() {
               {/* Final answer */}
               <div style={{
                 padding: '14px',
-                background: 'rgba(0,0,0,0.2)',
+                background: 'var(--bg-field)',
+                border: '1px solid var(--border)',
                 borderRadius: 'var(--radius)',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '0.82rem',
@@ -262,11 +264,11 @@ export default function Agent() {
         ))}
 
         {agentMutation.isPending && (
-          <div className="card" style={{ borderColor: 'rgba(213,0,249,0.2)' }}>
+          <div className="card" style={{ borderColor: 'var(--purple-ai)', borderWidth: '1px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Cpu size={14} color="var(--purple-ai)" style={{ animation: 'pulse 1s infinite' }} />
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Agente raciociná
+                Agente raciocinando...
               </span>
               {[0, 1, 2].map(i => <span key={i} className="loading-dot" style={{ animationDelay: `${i * 0.2}s` }} />)}
             </div>
@@ -277,12 +279,12 @@ export default function Agent() {
       </div>
 
       {/* Input */}
-      <div style={{ display: 'flex', gap: '8px', padding: '12px', background: 'var(--bg-card)', border: '1px solid rgba(213,0,249,0.2)', borderRadius: 'var(--radius-lg)' }}>
+      <div style={{ display: 'flex', gap: '8px', padding: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) } }}
-          placeholder="Faça uma pergunta complexa sobre NFL..."
+          placeholder="Pergunta algo profundo sobre NFL — a IA pode chamar dados ao vivo."
           style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--text-primary)' }}
         />
         <button onClick={() => send(input)} disabled={!input.trim() || agentMutation.isPending}
