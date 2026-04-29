@@ -1,70 +1,39 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts'
-import { nflApi, TeamStats } from '../api/nflApi'
+import { Bot } from 'lucide-react'
+import { nflApi } from '../api/nflApi'
 import HotSeat from '../components/ml/HotSeat'
-import TeamCard from '../components/team/TeamCard'
-import { useTeamsInfo } from '../hooks/useTeamInfo'
-import { TrendingUp, Shield, Target, Activity } from 'lucide-react'
+import { useTeamsInfo, normalizeAbbr } from '../hooks/useTeamInfo'
+import ChampionCard from '../components/team/ChampionCard'
 
-const TeamYTick = ({ x, y, payload, teamsInfo }: any) => {
-  const team = teamsInfo?.find((t: any) => t.abbr === payload.value)
+const TeamYTick = ({ x, y, payload, teamsInfo, positions }: any) => {
+  const team = teamsInfo?.find((t: any) => t.abbr === normalizeAbbr(payload.value))
+  const pos = positions?.[payload.value]
   return (
     <g transform={`translate(${x},${y})`}>
+      <text
+        x={-92} y={4} textAnchor="end"
+        fill="var(--text-muted)"
+        style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700 }}
+      >
+        {pos ? `${pos}º` : ''}
+      </text>
       {team && (
         <image
           href={team.logo}
-          x={-44}
-          y={-9}
-          width={18}
-          height={18}
+          x={-72} y={-9} width={18} height={18}
           preserveAspectRatio="xMidYMid meet"
         />
       )}
       <text
-        x={-2}
-        y={4}
-        textAnchor="end"
+        x={-2} y={4} textAnchor="end"
         fill="var(--text-secondary)"
         style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}
       >
         {payload.value}
       </text>
     </g>
-  )
-}
-
-function MetricCard({ label, value, unit = '', icon: Icon, positive }: {
-  label: string; value: string; unit?: string; icon: any; positive?: boolean
-}) {
-  return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.62rem',
-          color: 'var(--text-muted)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}>
-          {label}
-        </span>
-        <Icon size={14} color="var(--text-muted)" />
-      </div>
-      <div style={{
-        fontFamily: 'var(--font-display)',
-        fontWeight: 800,
-        fontSize: '2.2rem',
-        letterSpacing: '0.02em',
-        color: positive === undefined
-          ? 'var(--text-primary)'
-          : positive
-            ? 'var(--green-field)'
-            : 'var(--red-alert)',
-      }}>
-        {value}<span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>{unit}</span>
-      </div>
-    </div>
   )
 }
 
@@ -79,10 +48,31 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       padding: '8px 12px',
       fontFamily: 'var(--font-mono)',
       fontSize: '0.72rem',
+      boxShadow: 'var(--shadow)',
     }}>
       <div style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>{label}</div>
       <div style={{ color: value >= 0 ? 'var(--green-field)' : 'var(--red-alert)', fontWeight: 700 }}>
-        EPA: {value >= 0 ? '+' : ''}{value.toFixed(4)}
+        {value >= 0 ? '+' : ''}{value.toFixed(3)} EPA/jogada
+      </div>
+    </div>
+  )
+}
+
+function StatPill({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div title={hint} style={{ flex: '1 1 auto', minWidth: '140px' }}>
+      <div style={{
+        fontFamily: 'var(--font-mono)', fontSize: '0.6rem',
+        color: 'var(--text-muted)', letterSpacing: '0.1em',
+        textTransform: 'uppercase', marginBottom: '4px',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.25rem',
+        color: 'var(--text-primary)', letterSpacing: '0.02em',
+      }}>
+        {value}
       </div>
     </div>
   )
@@ -114,11 +104,19 @@ export default function Dashboard() {
 
   const bestOffense = teams?.reduce((a, b) => a.off_epa > b.off_epa ? a : b)
   const bestDefense = teams?.reduce((a, b) => a.def_epa < b.def_epa ? a : b)
-  const leagueAvgEpa = teams ? teams.reduce((s, t) => s + t.off_epa, 0) / teams.length : 0
+  const leagueAvgOff = teams ? teams.reduce((s, t) => s + t.off_epa, 0) / teams.length : 0
+  const leagueAvgDef = teams ? teams.reduce((s, t) => s + t.def_epa, 0) / teams.length : 0
+
+  // Mapa abbr → posição (1-based) na ordem atual
+  const positions = sortedTeams.reduce((acc, t, i) => {
+    acc[t.team] = i + 1
+    return acc
+  }, {} as Record<string, number>)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Page Header */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+      {/* ── 1. Header ─────────────────────────────────────────── */}
       <div>
         <h1 style={{
           fontFamily: 'var(--font-display)',
@@ -127,61 +125,76 @@ export default function Dashboard() {
           letterSpacing: '0.06em',
           textTransform: 'uppercase',
           color: 'var(--text-primary)',
-          marginBottom: '4px',
+          marginBottom: '6px',
         }}>
-          Dashboard <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Season {2025}</span>
+          NFL <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Temporada 2025-2026</span>
         </h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          Análise baseada em EPA (Expected Points Added) · Dados nfl_data_py
-          {modelInfo?.accuracy && (
-            <span style={{ marginLeft: '16px', color: 'var(--green-field)' }}>
-              · Modelo: {(modelInfo.accuracy * 100).toFixed(1)}% acurácia
-            </span>
-          )}
+        <p style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.82rem',
+          color: 'var(--text-secondary)',
+          lineHeight: 1.6,
+          maxWidth: '780px',
+        }}>
+          Os destaques da temporada que terminou no Super Bowl LX. Quem mandou no ataque, quem segurou na defesa, e como anda o quarterback do seu time.
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-        <MetricCard
-          label="Melhor Ataque (Off EPA)"
-          value={bestOffense ? `${bestOffense.team}` : '—'}
-          icon={TrendingUp}
-          positive
-        />
-        <MetricCard
-          label="Melhor Defesa (Def EPA)"
-          value={bestDefense ? `${bestDefense.team}` : '—'}
-          icon={Shield}
-          positive
-        />
-        <MetricCard
-          label="Média da Liga"
-          value={leagueAvgEpa.toFixed(4)}
-          unit=" EPA"
-          icon={Activity}
-          positive={leagueAvgEpa >= 0}
-        />
-        <MetricCard
-          label="Times Analisados"
+      {/* ── 2. Champions: 2 cards grandes ─────────────────────── */}
+      {bestOffense && bestDefense && (
+        <div>
+          <h2 style={{
+            fontFamily: 'var(--font-display)', fontWeight: 700,
+            fontSize: '1rem', letterSpacing: '0.12em',
+            textTransform: 'uppercase', color: 'var(--text-muted)',
+            marginBottom: '14px',
+          }}>
+            Os Melhores da Temporada
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <ChampionCard variant="attack"  abbr={bestOffense.team} epaValue={bestOffense.off_epa} />
+            <ChampionCard variant="defense" abbr={bestDefense.team} epaValue={bestDefense.def_epa} />
+          </div>
+        </div>
+      )}
+
+      {/* ── 3. Stats da liga (linha compacta) ─────────────────── */}
+      <div style={{
+        display: 'flex', gap: '32px', flexWrap: 'wrap',
+        padding: '16px 22px',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: 'var(--shadow-sm)',
+      }}>
+        <StatPill
+          label="Times analisados"
           value={teams?.length.toString() ?? '—'}
-          icon={Target}
+        />
+        <StatPill
+          label="Média da liga · ataque"
+          value={`${leagueAvgOff >= 0 ? '+' : ''}${leagueAvgOff.toFixed(3)}`}
+          hint="EPA médio por jogada considerando todos os 32 times"
+        />
+        <StatPill
+          label="Média da liga · defesa"
+          value={`${leagueAvgDef >= 0 ? '+' : ''}${leagueAvgDef.toFixed(3)}`}
+          hint="EPA permitido por jogada na média (menor = liga defensivamente mais forte)"
         />
       </div>
 
-      {/* Main grid */}
+      {/* ── 4. Ranking + Quarterback ──────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }}>
-        {/* EPA Chart */}
+
+        {/* Ranking */}
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 700,
-              fontSize: '1.1rem',
-              letterSpacing: '0.08em',
+              fontFamily: 'var(--font-display)', fontWeight: 700,
+              fontSize: '1.1rem', letterSpacing: '0.08em',
               textTransform: 'uppercase',
             }}>
-              Ranking de Eficiência
+              Ranking dos 32 Times
             </h2>
             <div style={{ display: 'flex', gap: '8px' }}>
               {(['off_epa', 'def_epa'] as const).map(key => (
@@ -196,40 +209,45 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '0.72rem',
+            color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5,
+          }}>
+            {sortBy === 'off_epa'
+              ? 'Times que mais criam pontos esperados por jogada — líder no topo, pior no fim. Cada barra usa a cor oficial do time.'
+              : 'Times que mais tiram pontos esperados do adversário — líder no topo (barra negativa), pior no fim. Aqui menor é melhor.'
+            }
+          </p>
 
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
               <span className="loading-dot" /> Carregando dados da NFL...
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={sortedTeams} layout="vertical" margin={{ left: 0, right: 20 }}>
-                <XAxis
-                  type="number"
-                  domain={['auto', 'auto']}
-                  tick={{ fill: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
+            <ResponsiveContainer width="100%" height={420}>
+              <BarChart data={sortedTeams} layout="vertical" margin={{ left: 10, right: 24 }}>
+                <XAxis type="number" hide />
                 <YAxis
                   dataKey="team"
                   type="category"
-                  tick={{ fill: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: 10 }}
+                  tick={(props) => <TeamYTick {...props} teamsInfo={teamsInfo} positions={positions} />}
                   tickLine={false}
                   axisLine={false}
-                  width={36}
+                  width={100}
                 />
-                <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine x={0} stroke="var(--text-muted)" strokeWidth={1} />
-                <Bar dataKey={sortBy} radius={[0, 2, 2, 0]}>
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--bg-field)' }} />
+                <ReferenceLine x={0} stroke="var(--border-strong)" strokeWidth={1} />
+                <Bar dataKey={sortBy} radius={[0, 3, 3, 0]}>
                   {sortedTeams.map((entry) => {
                     const val = sortBy === 'def_epa' ? entry.def_epa : entry.off_epa
                     const good = sortBy === 'def_epa' ? val < 0 : val > 0
+                    const teamInfo = teamsInfo?.find(t => t.abbr === normalizeAbbr(entry.team))
+                    const teamColor = teamInfo?.color
                     return (
                       <Cell
                         key={entry.team}
-                        fill={good ? 'var(--green-field)' : 'var(--red-alert)'}
-                        fillOpacity={0.8}
+                        fill={teamColor ?? (good ? 'var(--green-field)' : 'var(--red-alert)')}
+                        fillOpacity={good ? 0.9 : 0.45}
                       />
                     )
                   })}
@@ -239,50 +257,78 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Hot Seat */}
+        {/* Quarterback em pressão */}
         <div className="card">
           <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: '1.1rem',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            marginBottom: '16px',
+            fontFamily: 'var(--font-display)', fontWeight: 700,
+            fontSize: '1.1rem', letterSpacing: '0.08em',
+            textTransform: 'uppercase', marginBottom: '4px',
           }}>
-            🚨 Berlinda do QB
+            🚨 Como Anda o Quarterback
           </h2>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '0.72rem',
+            color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5,
+          }}>
+            O <strong style={{ color: 'var(--text-primary)' }}>quarterback (QB)</strong> é o passador, líder do ataque. Selecione um time abaixo e veja se ele está em risco de perder o lugar — combina EPA recente, precisão e tendência dos últimos jogos.
+          </p>
           <HotSeat team={hotSeatTeam} onTeamChange={setHotSeatTeam} />
         </div>
       </div>
 
-      {/* Model Info */}
+      {/* ── 5. IA discreta no rodapé ──────────────────────────── */}
       {modelInfo?.accuracy && (
-        <div className="card" style={{ borderColor: 'rgba(68,138,255,0.2)' }}>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                Módulo 1 — XGBoost Win Predictor
-              </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.2rem', color: 'var(--blue-data)', marginTop: '4px' }}>
-                Modelo Treinado ✓
-              </div>
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderLeft: '3px solid var(--blue-data)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '18px 22px',
+          boxShadow: 'var(--shadow-sm)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          flexWrap: 'wrap',
+        }}>
+          <Bot size={28} color="var(--blue-data)" style={{ flexShrink: 0 }} />
+          <div style={{ flex: '1 1 320px' }}>
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: '0.6rem',
+              color: 'var(--text-muted)', letterSpacing: '0.12em',
+              textTransform: 'uppercase', marginBottom: '4px',
+            }}>
+              Previsão de Vitória · IA
             </div>
-            {[
-              { label: 'Acurácia', value: `${(modelInfo.accuracy * 100).toFixed(1)}%` },
-              { label: 'ROC-AUC', value: modelInfo.roc_auc?.toFixed(4) ?? '—' },
-              { label: 'CV ROC-AUC', value: `${modelInfo.cv_roc_auc_mean?.toFixed(4)} ± ${modelInfo.cv_roc_auc_std?.toFixed(4)}` },
-              { label: 'Amostras', value: modelInfo.training_samples?.toLocaleString() ?? '—' },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  {label}
-                </div>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
-                  {value}
-                </div>
-              </div>
-            ))}
+            <p style={{
+              fontFamily: 'var(--font-mono)', fontSize: '0.82rem',
+              color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0,
+            }}>
+              A IA aprendeu com{' '}
+              <strong style={{ color: 'var(--text-primary)' }}>
+                {modelInfo.training_samples?.toLocaleString() ?? '—'} jogos
+              </strong>
+              {' '}das últimas 4 temporadas e acerta o vencedor em{' '}
+              <strong style={{ color: 'var(--green-field)' }}>
+                {(modelInfo.accuracy * 100).toFixed(1)}%
+              </strong>
+              {' '}das partidas. Use a aba <strong style={{ color: 'var(--blue-data)' }}>Matchup</strong> para ver previsões.
+            </p>
           </div>
+          <details style={{ flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            <summary style={{ cursor: 'pointer', userSelect: 'none' }}>Métricas técnicas</summary>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              {[
+                { label: 'Acurácia', value: `${(modelInfo.accuracy * 100).toFixed(1)}%`, hint: '% de jogos com vencedor previsto correto' },
+                { label: 'ROC-AUC', value: modelInfo.roc_auc?.toFixed(3) ?? '—', hint: 'Qualidade do ranking de probabilidades (1 = perfeito, 0.5 = aleatório)' },
+                { label: 'CV ROC-AUC', value: `${modelInfo.cv_roc_auc_mean?.toFixed(3)} ± ${modelInfo.cv_roc_auc_std?.toFixed(3)}`, hint: 'ROC-AUC médio em validação cruzada (5-fold)' },
+              ].map(({ label, value, hint }) => (
+                <div key={label} title={hint}>
+                  <div style={{ fontSize: '0.58rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)', marginTop: '2px' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
       )}
     </div>
