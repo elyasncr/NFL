@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏈 NFL Analytics Lab
 
 Projeto de portfólio completo combinando **Machine Learning**, **LLM + RAG**, **Agentes de IA** e **Visão Computacional** aplicados à NFL.
@@ -124,3 +125,7 @@ docker-compose up --build
 ## 📝 Licença
 
 MIT — use, estude, publique e cite o repositório.
+=======
+# NFL
+Estudo sobre LLM, Machine Learning, Visão Computacional e Container
+>>>>>>> cdb0430652ee8a0ffbfffbd41684d3e7fffc64e7
