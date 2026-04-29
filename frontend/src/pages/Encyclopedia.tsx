@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import Skeleton from '../components/ui/Skeleton'
 
 interface Term {
   term: string
@@ -212,7 +213,7 @@ function TermAccordion({ term }: { term: Term }) {
       {open && (
         <div style={{
           padding: '16px 18px 18px 42px',
-          background: 'rgba(0,0,0,0.2)',
+          background: 'var(--bg-field)',
           borderTop: '1px solid var(--border)',
         }}>
           <p style={{
@@ -261,7 +262,7 @@ export default function Encyclopedia() {
           Enciclopédia <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Sabermetrics NFL</span>
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          As métricas, regras e conceitos de ML por trás das nossas análises
+          Tudo que você precisa saber pra entender os dados que usamos — sem enrolação.
         </p>
       </div>
 
