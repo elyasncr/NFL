@@ -3,6 +3,10 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts'
 import { nflApi } from '../api/nflApi'
 import { Upload, Eye, BarChart2 } from 'lucide-react'
+import TeamChip from '../components/team/TeamChip'
+import Skeleton from '../components/ui/Skeleton'
+import ErrorState from '../components/ui/ErrorState'
+import EmptyState from '../components/ui/EmptyState'
 
 const NFL_TEAMS = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LAC','LAR','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
 
@@ -55,7 +59,7 @@ export default function Vision() {
           Visão <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Computer Vision</span>
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          Análise de formações táticas · Diagramas de campo · OpenCV para imagens
+          Veja como cada formação se sai em campo, explore diagramas táticos e analise imagens com Computer Vision.
         </p>
       </div>
 
@@ -74,33 +78,43 @@ export default function Vision() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Team selector */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-muted)' }}>FILTRAR TIME:</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>FILTRAR TIME:</span>
             <button onClick={() => setSelectedTeam('')}
               className={`btn ${selectedTeam === '' ? 'btn-primary' : 'btn-ghost'}`}
               style={{ padding: '4px 10px', fontSize: '0.65rem' }}>
               LIGA TODA
             </button>
             {NFL_TEAMS.map(t => (
-              <button key={t} onClick={() => setSelectedTeam(t)}
-                className={`btn ${selectedTeam === t ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ padding: '4px 10px', fontSize: '0.65rem' }}>
-                {t}
-              </button>
+              <TeamChip
+                key={t}
+                abbr={t}
+                active={selectedTeam === t}
+                onClick={() => setSelectedTeam(t)}
+              />
             ))}
           </div>
 
           {loadingData && (
-            <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              <span className="loading-dot" /> Carregando dados de formações...
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <Skeleton variant="card" height={300} />
+              <Skeleton variant="card" height={300} />
             </div>
           )}
 
-          {formationsData && (
+          {formationsData && formationsData.chart.labels.length === 0 && (
+            <EmptyState
+              message="Sem jogadas suficientes pra esse filtro."
+              hint="Tenta outro time ou volta pra liga toda."
+              action={{ label: 'Liga Toda', onClick: () => setSelectedTeam('') }}
+            />
+          )}
+
+          {formationsData && formationsData.chart.labels.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               {/* EPA Chart */}
               <div className="card">
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '16px' }}>
-                  EPA Médio por Formação
+                  Quão eficiente é cada formação
                 </h3>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={formationsData.chart.labels.map((label, i) => ({
@@ -123,7 +137,7 @@ export default function Vision() {
               {/* Usage Chart */}
               <div className="card">
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '16px' }}>
-                  Frequência de Uso (%)
+                  Quanto cada formação aparece nas jogadas
                 </h3>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={formationsData.chart.labels.map((label, i) => ({
