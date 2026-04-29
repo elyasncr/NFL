@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { nflApi, HotSeatResult } from '../../api/nflApi'
 import { AlertTriangle, CheckCircle, TrendingDown, TrendingUp, Minus } from 'lucide-react'
+import TeamChip from '../team/TeamChip'
+import { useTeam, useTeamsInfo } from '../../hooks/useTeamInfo'
+import Skeleton from '../ui/Skeleton'
+import ErrorState from '../ui/ErrorState'
 
 const NFL_TEAMS = [
   'ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE',
@@ -16,28 +20,28 @@ interface Props {
 
 const severityConfig = {
   'CRÍTICO': {
-    bg: 'rgba(255,23,68,0.08)',
+    bg: 'var(--red-glow)',
     border: 'var(--red-alert)',
     color: 'var(--red-alert)',
     icon: AlertTriangle,
     pulse: true,
   },
   'ALERTA': {
-    bg: 'rgba(255,171,0,0.08)',
+    bg: 'var(--amber-glow)',
     border: 'var(--amber-warn)',
     color: 'var(--amber-warn)',
     icon: AlertTriangle,
     pulse: false,
   },
   'ATENÇÃO': {
-    bg: 'rgba(255,171,0,0.05)',
+    bg: 'var(--amber-glow)',
     border: 'var(--amber-warn)',
     color: 'var(--amber-warn)',
     icon: Minus,
     pulse: false,
   },
   'SEGURO': {
-    bg: 'rgba(0,230,118,0.05)',
+    bg: 'var(--green-glow)',
     border: 'var(--green-field)',
     color: 'var(--green-field)',
     icon: CheckCircle,
@@ -60,7 +64,7 @@ function EpaBar({ value }: { value: number }) {
         color: 'var(--text-muted)',
         marginBottom: '4px',
       }}>
-        <span>EPA/Play (últimos jogos)</span>
+        <span>Eficiência por jogada (últimos jogos)</span>
         <span style={{ color: positive ? 'var(--green-field)' : 'var(--red-alert)', fontWeight: 700 }}>
           {value > 0 ? '+' : ''}{value.toFixed(3)}
         </span>
@@ -97,55 +101,43 @@ function EpaBar({ value }: { value: number }) {
 }
 
 export default function HotSeat({ team, onTeamChange }: Props) {
-  const { data, isLoading, error } = useQuery({
+  const hotSeatQuery = useQuery({
     queryKey: ['hot-seat', team],
     queryFn: () => nflApi.getHotSeat(team),
     enabled: !!team,
   })
+  const data = hotSeatQuery.data
+  const isLoading = hotSeatQuery.isLoading
+  const error = hotSeatQuery.error
+
+  // Garante que metadata dos times esteja disponível pra TeamChip e accent visual
+  useTeamsInfo()
+  const teamInfo = useTeam(team)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Team Selector */}
       {onTeamChange && (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {NFL_TEAMS.map(t => (
-            <button
+            <TeamChip
               key={t}
+              abbr={t}
+              active={t === team}
               onClick={() => onTeamChange(t)}
-              style={{
-                padding: '4px 10px',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                borderRadius: '2px',
-                border: `1px solid ${t === team ? 'var(--green-field)' : 'var(--border)'}`,
-                background: t === team ? 'var(--green-glow)' : 'transparent',
-                color: t === team ? 'var(--green-field)' : 'var(--text-muted)',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {t}
-            </button>
+            />
           ))}
         </div>
       )}
 
       {/* Card de Status */}
       {isLoading && (
-        <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-          <span className="loading-dot" />
-          <span style={{ marginLeft: '10px', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Analisando {team}...
-          </span>
+        <div>
+          <Skeleton variant="card" height={140} />
         </div>
       )}
 
-      {error && (
-        <div className="card" style={{ borderColor: 'var(--red-alert)', color: 'var(--red-alert)', textAlign: 'center' }}>
-          Erro ao carregar dados. Verifique se a API está rodando.
-        </div>
-      )}
+      {error && <ErrorState onRetry={() => hotSeatQuery.refetch()} />}
 
       {data && (() => {
         const config = severityConfig[data.severity] || severityConfig['SEGURO']
@@ -156,6 +148,7 @@ export default function HotSeat({ team, onTeamChange }: Props) {
           <div style={{
             background: config.bg,
             border: `1px solid ${config.border}`,
+            borderLeft: teamInfo ? `4px solid ${teamInfo.color}` : `1px solid ${config.border}`,
             borderRadius: 'var(--radius-lg)',
             padding: '24px',
             position: 'relative',
@@ -169,32 +162,56 @@ export default function HotSeat({ team, onTeamChange }: Props) {
                 right: '-20px',
                 width: '120px',
                 height: '120px',
-                background: 'radial-gradient(circle, rgba(255,23,68,0.2) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(211,47,47,0.18) 0%, transparent 70%)',
                 pointerEvents: 'none',
               }} />
             )}
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Icon
-                  size={20}
-                  color={config.color}
-                  style={config.pulse ? { animation: 'pulse 1s infinite' } : undefined}
-                />
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px', position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {teamInfo ? (
+                  <img
+                    src={teamInfo.logo}
+                    alt={teamInfo.abbr}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      objectFit: 'contain',
+                      filter: `drop-shadow(0 0 8px ${teamInfo.color}80)`,
+                      flexShrink: 0,
+                    }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                  />
+                ) : (
+                  <Icon
+                    size={20}
+                    color={config.color}
+                    style={config.pulse ? { animation: 'pulse 1s infinite' } : undefined}
+                  />
+                )}
                 <div>
                   <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
                     fontFamily: 'var(--font-display)',
                     fontWeight: 800,
                     fontSize: '1.4rem',
                     letterSpacing: '0.05em',
                     color: config.color,
                     textTransform: 'uppercase',
+                    lineHeight: 1.1,
                   }}>
+                    <Icon
+                      size={18}
+                      color={config.color}
+                      style={config.pulse ? { animation: 'pulse 1s infinite' } : undefined}
+                    />
                     {data.quarterback}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                    {data.team} · {data.games_analyzed} jogos analisados
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {teamInfo ? `${teamInfo.city} ${teamInfo.nick}` : data.team} · {data.games_analyzed} jogos analisados
                   </div>
                 </div>
               </div>
@@ -213,7 +230,7 @@ export default function HotSeat({ team, onTeamChange }: Props) {
               gap: '12px',
               marginTop: '16px',
             }}>
-              <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
+              <div style={{ background: 'var(--bg-field)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                   CPOE
                 </div>
@@ -226,9 +243,9 @@ export default function HotSeat({ team, onTeamChange }: Props) {
                   {data.recent_cpoe > 0 ? '+' : ''}{data.recent_cpoe.toFixed(1)}%
                 </div>
               </div>
-              <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
+              <div style={{ background: 'var(--bg-field)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  TENDÊNCIA
+                  Como tá indo
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <TrendIcon
