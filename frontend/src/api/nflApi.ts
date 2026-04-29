@@ -31,6 +31,14 @@ export interface TeamInfo {
   color2: string
   logo: string
 }
+export interface PlayoffGame {
+  round: 'WC' | 'DIV' | 'CONF' | 'SB'
+  home: string
+  away: string
+  home_score: number | null
+  away_score: number | null
+  date: string
+}
 
 export const nflApi = {
   getAllTeams: () => api.get<TeamStats[]>('/ml/teams').then(r => r.data),
@@ -46,4 +54,5 @@ export const nflApi = {
   listFormations: () => api.get<{ formations: Array<{ name: string; description: string }> }>('/vision/formations/list').then(r => r.data),
   analyzeImage: (file: File) => { const fd = new FormData(); fd.append('file', file); return api.post<ImageAnalysis>('/vision/analyze-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data) },
   getTeamsInfo: () => api.get<TeamInfo[]>('/ml/teams-info').then(r => r.data),
+  getPlayoffs: (season: number) => api.get<PlayoffGame[]>(`/ml/playoffs/${season}`).then(r => r.data),
 }
