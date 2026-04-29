@@ -113,3 +113,43 @@ def teams_info():
     Cacheado em memória.
     """
     return get_teams_info()
+
+
+@router.get("/playoffs/{season}")
+def get_playoffs(season: int):
+    """
+    Retorna jogos da pós-temporada (POST) com placar e datas.
+
+    Estrutura de resposta:
+    [
+      {"round": "WC"|"DIV"|"CONF"|"SB", "home": "BUF", "away": "DEN",
+       "home_score": 31, "away_score": 17, "date": "2026-01-11"}
+    ]
+    """
+    from data.loader import get_schedules
+
+    schedules = get_schedules([season])
+    post = schedules[
+        (schedules["season"] == season) &
+        (schedules["game_type"].isin(["WC", "DIV", "CON", "SB"]))
+    ].copy()
+
+    if post.empty:
+        return []
+
+    round_map = {"WC": "WC", "DIV": "DIV", "CON": "CONF", "SB": "SB"}
+    games = []
+    for _, row in post.iterrows():
+        games.append({
+            "round": round_map.get(row["game_type"], row["game_type"]),
+            "home": row["home_team"],
+            "away": row["away_team"],
+            "home_score": int(row["home_score"]) if row["home_score"] is not None else None,
+            "away_score": int(row["away_score"]) if row["away_score"] is not None else None,
+            "date": str(row["gameday"])[:10],
+        })
+
+    # Ordena por round (WC → DIV → CONF → SB) e por data
+    order = {"WC": 0, "DIV": 1, "CONF": 2, "SB": 3}
+    games.sort(key=lambda g: (order.get(g["round"], 9), g["date"]))
+    return games
