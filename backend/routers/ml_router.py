@@ -7,7 +7,7 @@ import logging
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException
-from data.loader import get_pbp_data
+from data.loader import get_pbp_data, get_schedules
 from ml.features import get_qb_hot_seat, get_qb_cpoe_stats, calculate_player_props
 from ml.predictor import predict_matchup, get_all_teams_ranking, get_team_stats, load_model_metrics
 from ml.teams_info import get_teams_info
@@ -123,7 +123,7 @@ def teams_info():
 @router.get("/playoffs/{season}")
 def get_playoffs(season: int):
     """
-    Retorna jogos da pós-temporada (POST) com placar e datas.
+    Retorna jogos da pós-temporada (game_type ∈ {WC, DIV, CON, SB}) com placar e datas.
 
     Estrutura de resposta:
     [
@@ -131,12 +131,10 @@ def get_playoffs(season: int):
        "home_score": 31, "away_score": 17, "date": "2026-01-11"}
     ]
     """
-    from data.loader import get_schedules
-
     try:
         schedules = get_schedules([season])
-    except ValueError as exc:
-        logger.warning("get_schedules raised ValueError for season %s: %s", season, exc)
+    except Exception as exc:
+        logger.warning("Failed to load schedules for season %s: %s", season, exc)
         return []
 
     post = schedules[
@@ -147,6 +145,7 @@ def get_playoffs(season: int):
     if post.empty:
         return []
 
+    # nfl_data_py encodes Conference Championship as "CON", not "CONF"
     round_map = {"WC": "WC", "DIV": "DIV", "CON": "CONF", "SB": "SB"}
     games = []
     for _, row in post.iterrows():
