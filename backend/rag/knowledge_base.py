@@ -148,7 +148,7 @@ POR QUE É MELHOR QUE COMPLETION%?
 Um QB que joga em sistema de passes curtos (Andy Reid) terá completion% alto naturalmente.
 CPOE remove esse viés e mede apenas a contribuição do QB.
 
-Drake Maye (NE) em 2024: CPOE negativo consistente = sinal de dificuldades de adaptação.
+Drake Maye (NE) em 2025: CPOE negativo consistente = sinal de dificuldades de adaptação.
 Patrick Mahomes: CPOE historicamente entre +4% e +8%.
 """,
     },
@@ -329,11 +329,11 @@ Avaliado por: zone coverage, run stops, targets concedidos.
     # TIMES E CONTEXTO ATUAL
     # ─────────────────────────────────────────
     {
-        "id": "teams_context_2024",
+        "id": "teams_context_2025",
         "category": "Times",
-        "title": "Contexto NFL 2024-2025",
+        "title": "Contexto NFL 2025-2026",
         "content": """
-CONTEXTO DA NFL TEMPORADA 2024-2025:
+CONTEXTO DA NFL TEMPORADA 2025-2026:
 
 KANSAS CITY CHIEFS:
 Dominantes com Patrick Mahomes. EPA ofensivo de elite.

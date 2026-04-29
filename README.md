@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🏈 NFL Analytics Lab
 
 Projeto de portfólio completo combinando **Machine Learning**, **LLM + RAG**, **Agentes de IA** e **Visão Computacional** aplicados à NFL.
@@ -11,7 +10,7 @@ Projeto de portfólio completo combinando **Machine Learning**, **LLM + RAG**, *
 
 ```
 nfl-analytics/
-├── docker-compose.yml        # Orquestra backend + frontend + ollama
+├── docker-compose.yml        # Orquestra backend + frontend (Ollama nativo no host)
 ├── backend/
 │   ├── main.py               # FastAPI app
 │   ├── config.py             # Configurações centralizadas
@@ -21,17 +20,20 @@ nfl-analytics/
 │   │   ├── features.py       # EPA, CPOE, Success Rate, Player Props
 │   │   ├── train.py          # Treinamento XGBoost
 │   │   └── predictor.py      # Inferência do modelo
-│   ├── rag/                  # Módulo 2 (em desenvolvimento)
-│   ├── agent/                # Módulo 3 (em desenvolvimento)
-│   ├── vision/               # Módulo 4 (em desenvolvimento)
+│   ├── rag/                  # Módulo 2 — RAG + ChromaDB
+│   ├── agent/                # Módulo 3 — Agente ReAct + Tool Calling
+│   ├── vision/               # Módulo 4 — Visão Computacional
 │   └── routers/              # Endpoints FastAPI por módulo
 └── frontend/
     └── src/
         ├── api/nflApi.ts     # Client HTTP para a API
         ├── components/
         │   ├── layout/       # Navbar
-        │   └── ml/           # HotSeat, MatchupRadar
-        └── pages/            # Dashboard, Matchup, Encyclopedia
+        │   ├── ml/           # HotSeat, MatchupRadar
+        │   ├── rag/          # Componentes do chat
+        │   ├── agent/        # Componentes do agent
+        │   └── vision/       # Componentes da visão
+        └── pages/            # Dashboard, Matchup, Encyclopedia, Chat, Agent, Vision
 ```
 
 ---
@@ -39,61 +41,68 @@ nfl-analytics/
 ## 🧠 Módulos do Projeto
 
 ### ✅ Módulo 1 — Machine Learning Clássico
-- **Win Predictor**: XGBoost treinado com EPA e Success Rate de 3 temporadas
+- **Win Predictor**: XGBoost treinado com EPA e Success Rate de 3 temporadas (60.7% accuracy, 0.66 ROC-AUC CV)
 - **A Berlinda**: Alertas para QBs com EPA negativo nos últimos 3 jogos
 - **Matchup Radar**: Gráfico comparativo com probabilidade de vitória
 - **Player Props**: Floor & Ceiling de yardas por jogador
 
-### 🚧 Módulo 2 — LLM + RAG (Ollama)
+### ✅ Módulo 2 — LLM + RAG (Ollama)
 - Chat em português sobre NFL
-- Base de conhecimento com regras e estatísticas históricas
-- Explicação de jogadas em linguagem natural
+- Base de conhecimento com 15 documentos (regras, métricas, táticas, contexto)
+- Retrieval com ChromaDB + sentence-transformers (`all-MiniLM-L6-v2`)
+- Geração com Ollama (`llama3.1`) via `httpx`
 
-### 🚧 Módulo 3 — Agente de IA (LangGraph)
-- Agente com ferramentas: busca stats, roda ML, consulta RAG
-- Interface conversacional multi-turn
-- Reasoning chain visível no frontend
+### ✅ Módulo 3 — Agente de IA (Ollama Tool Calling)
+- Agente ReAct com 5 ferramentas: stats, predição ML, hot-seat, RAG, ranking
+- Interface conversacional multi-turn com histórico
+- Reasoning chain (thinking → tool_call → tool_result → answer) visível no frontend
+- Fallback automático sem LLM via keyword matching
 
-### 🚧 Módulo 4 — Visão Computacional
-- Detecção de formações táticas (YOLOv8)
-- Classificação de esquemas ofensivos/defensivos
+### ✅ Módulo 4 — Visão Computacional
+- Análise de EPA por formação a partir de play-by-play (~37k jogadas/temporada)
+- Geração de diagramas de campo estilizados (matplotlib)
+- Detecção de jogadores em imagens com OpenCV (HoughCircles)
 
 ---
 
 ## 🚀 Como Rodar
 
 ### Pré-requisitos
-- Python 3.11+
-- Node.js 18+
-- (Opcional) Docker + Docker Compose
+- Docker Desktop (Windows/Mac/Linux) com 8 GB+ RAM alocados
+- Ollama nativo instalado e rodando no host com modelo `llama3.1` baixado:
+  ```bash
+  ollama pull llama3.1
+  ```
+- ~10 GB de disco livre (5 GB Ollama + 4 GB imagens Docker + 1 GB caches)
+- Internet na primeira execução (download de dados NFL via `nfl_data_py`)
 
-### Opção A — Local (sem Docker)
+### Subir tudo
 
-**Backend:**
 ```bash
-cd backend
-pip install -r requirements.txt
-
-# 1. Treina o modelo (baixa dados da NFL ~5min na primeira vez)
-python -m ml.train
-
-# 2. Sobe a API
-uvicorn main:app --reload
-# API disponível em http://localhost:8000
-# Docs interativos em http://localhost:8000/docs
+docker compose up -d
 ```
 
-**Frontend:**
+Aguarde 5-15 min na primeira execução (download NFL data + treino XGBoost + indexação ChromaDB). Acompanhe com:
+
 ```bash
-cd frontend
-npm install
-npm run dev
-# Dashboard disponível em http://localhost:5173
+docker compose logs -f backend
 ```
 
-### Opção B — Docker Compose
+Quando aparecer `Uvicorn running on http://0.0.0.0:8000`, está pronto.
+
+### Acessar
+
+- **Dashboard**: http://localhost:5173
+- **API docs**: http://localhost:8000/docs
+- **Healthcheck**: http://localhost:8000/health
+
+### Usando o Makefile
+
 ```bash
-docker-compose up --build
+make up       # docker compose up -d
+make logs     # logs de tudo
+make status   # status dos containers + healthchecks
+make down     # parar
 ```
 
 ---
@@ -102,14 +111,14 @@ docker-compose up --build
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Dados | nfl_data_py |
-| ML | Scikit-Learn, XGBoost |
-| LLM | Ollama (llama3, local) |
-| RAG | LangChain + ChromaDB |
-| Agente | LangGraph |
-| Visão | OpenCV, YOLOv8 |
+| Dados | nfl_data_py 0.3.3, pandas 1.5.x |
+| ML | scikit-learn, XGBoost |
+| LLM | Ollama nativo no host (llama3.1) |
+| RAG | ChromaDB + sentence-transformers |
+| Agente | Ollama Tool Calling via httpx |
+| Visão | OpenCV (HoughCircles), matplotlib |
 | API | FastAPI |
-| Frontend | React + Recharts |
+| Frontend | React + Vite + Recharts |
 | Deploy | Docker Compose |
 
 ---
@@ -125,7 +134,3 @@ docker-compose up --build
 ## 📝 Licença
 
 MIT — use, estude, publique e cite o repositório.
-=======
-# NFL
-Estudo sobre LLM, Machine Learning, Visão Computacional e Container
->>>>>>> cdb0430652ee8a0ffbfffbd41684d3e7fffc64e7

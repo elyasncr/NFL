@@ -27,12 +27,28 @@ def load_model():
     return joblib.load(path)
 
 
+def _to_jsonable(obj):
+    """Converte numpy/pandas types para Python builtins (FastAPI-safe)."""
+    import numpy as np
+    if isinstance(obj, dict):
+        return {str(k): _to_jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_jsonable(v) for v in obj]
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, np.ndarray):
+        return [_to_jsonable(v) for v in obj.tolist()]
+    return obj
+
+
 def load_model_metrics() -> dict:
     """Carrega as métricas de avaliação do modelo."""
     path = settings.models_dir / "win_predictor_metrics.pkl"
     if not path.exists():
         return {}
-    return joblib.load(path)
+    return _to_jsonable(joblib.load(path))
 
 
 @lru_cache(maxsize=1)

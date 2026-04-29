@@ -20,6 +20,17 @@ export interface AgentResponse { answer: string; steps: AgentStep[]; tools_used:
 export interface FormationData { team: string; total_plays: number; chart: { labels: string[]; epa: number[]; usage: number[]; plays: number[]; success_rate: number[] }; insight: string }
 export interface FormationDiagram { formation: string; description: string; image_base64: string; mime_type: string }
 export interface ImageAnalysis { circles_detected: number; formation_estimate: string; confidence: string; spatial_analysis?: { horizontal_spread: number; vertical_spread: number }; player_positions?: Array<{ x: number; y: number; radius: number }>; note: string }
+export interface TeamInfo {
+  abbr: string
+  name: string
+  city: string
+  nick: string
+  conf: 'AFC' | 'NFC'
+  division: string
+  color: string
+  color2: string
+  logo: string
+}
 
 export const nflApi = {
   getAllTeams: () => api.get<TeamStats[]>('/ml/teams').then(r => r.data),
@@ -34,4 +45,5 @@ export const nflApi = {
   getFormationDiagram: (name: string) => api.get<FormationDiagram>(`/vision/formations/diagram/${encodeURIComponent(name)}`).then(r => r.data),
   listFormations: () => api.get<{ formations: Array<{ name: string; description: string }> }>('/vision/formations/list').then(r => r.data),
   analyzeImage: (file: File) => { const fd = new FormData(); fd.append('file', file); return api.post<ImageAnalysis>('/vision/analyze-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data) },
+  getTeamsInfo: () => api.get<TeamInfo[]>('/ml/teams-info').then(r => r.data),
 }

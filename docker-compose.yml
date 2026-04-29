@@ -7,42 +7,9 @@ version: '3.8'
 
 services:
 
-  # ── Ollama (LLM local) ───────────────────────────────────────
-  ollama:
-    image: ollama/ollama:latest
-    container_name: nfl_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
-    restart: unless-stopped
-
-  # ── Ollama Init (puxa o modelo na 1ª vez) ────────────────────
-  ollama-init:
-    image: ollama/ollama:latest
-    container_name: nfl_ollama_init
-    volumes:
-      - ollama_data:/root/.ollama
-    depends_on:
-      ollama:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-        echo '[INIT] Verificando modelo llama3...' &&
-        OLLAMA_HOST=http://ollama:11434 ollama pull llama3 &&
-        echo '[INIT] Modelo llama3 pronto!'
-      "
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-    restart: no
-
   # ── Backend (FastAPI) ─────────────────────────────────────────
+  # Conecta ao Ollama nativo do host (Windows) via host.docker.internal.
+  # Ollama deve estar rodando localmente em :11434 com llama3 instalado.
   backend:
     build:
       context: ./backend
@@ -57,11 +24,10 @@ services:
       - nfl_chroma:/app/chroma_db             # ChromaDB (RAG)
     environment:
       - PYTHONUNBUFFERED=1
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - OLLAMA_MODEL=llama3
-    depends_on:
-      ollama:
-        condition: service_healthy
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=llama3.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # Compatibilidade Linux; no Docker Desktop é automático
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
       interval: 15s
@@ -89,7 +55,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  ollama_data:      # Modelos do Ollama (llama3 = ~4GB)
   nfl_data_cache:   # Dados play-by-play da NFL (~500MB)
   nfl_models:       # Modelos ML treinados (.pkl)
   nfl_chroma:       # Índice vetorial ChromaDB

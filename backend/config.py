@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     debug: bool = True
 
     # Data
-    nfl_seasons: list[int] = [2022, 2023, 2024]
-    current_season: int = 2024
+    nfl_seasons: list[int] = [2022, 2023, 2024, 2025]
+    current_season: int = 2025
 
     # Paths
     models_dir: Path = Path("models")

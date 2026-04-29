@@ -3,7 +3,36 @@ import { useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts'
 import { nflApi, TeamStats } from '../api/nflApi'
 import HotSeat from '../components/ml/HotSeat'
+import TeamCard from '../components/team/TeamCard'
+import { useTeamsInfo } from '../hooks/useTeamInfo'
 import { TrendingUp, Shield, Target, Activity } from 'lucide-react'
+
+const TeamYTick = ({ x, y, payload, teamsInfo }: any) => {
+  const team = teamsInfo?.find((t: any) => t.abbr === payload.value)
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {team && (
+        <image
+          href={team.logo}
+          x={-44}
+          y={-9}
+          width={18}
+          height={18}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      )}
+      <text
+        x={-2}
+        y={4}
+        textAnchor="end"
+        fill="var(--text-secondary)"
+        style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}
+      >
+        {payload.value}
+      </text>
+    </g>
+  )
+}
 
 function MetricCard({ label, value, unit = '', icon: Icon, positive }: {
   label: string; value: string; unit?: string; icon: any; positive?: boolean
@@ -73,6 +102,8 @@ export default function Dashboard() {
     queryFn: nflApi.getModelInfo,
   })
 
+  const { data: teamsInfo } = useTeamsInfo()
+
   const sortedTeams = teams
     ? [...teams].sort((a, b) =>
         sortBy === 'def_epa'
@@ -98,7 +129,7 @@ export default function Dashboard() {
           color: 'var(--text-primary)',
           marginBottom: '4px',
         }}>
-          Dashboard <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Season {2024}</span>
+          Dashboard <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Season {2025}</span>
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           Análise baseada em EPA (Expected Points Added) · Dados nfl_data_py

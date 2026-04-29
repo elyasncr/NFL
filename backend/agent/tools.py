@@ -168,10 +168,11 @@ async def _predict_matchup(home_team: str, away_team: str) -> dict:
     }
 
 
-async def _check_qb_hot_seat(team_abbr: str, last_games: int = 3) -> dict:
+async def _check_qb_hot_seat(team_abbr: str, last_games=3) -> dict:
     from data.loader import get_pbp_data
     from ml.features import get_qb_hot_seat
     from config import settings
+    last_games = int(last_games)  # llama3.1 às vezes manda string
     pbp = get_pbp_data([settings.current_season])
     result = get_qb_hot_seat(pbp, team_abbr.upper(), last_n_games=last_games)
     if "error" in result:
@@ -199,8 +200,9 @@ async def _search_nfl_knowledge(query: str) -> dict:
     return {"content": combined, "sources": [r["metadata"]["title"] for r in results]}
 
 
-async def _get_team_rankings(top_n: int = 5, metric: str = "off_epa") -> dict:
+async def _get_team_rankings(top_n=5, metric: str = "off_epa") -> dict:
     from ml.predictor import get_all_teams_ranking
+    top_n = int(top_n)  # llama3.1 às vezes manda string
     all_teams = get_all_teams_ranking()
     if metric == "def_epa":
         sorted_teams = sorted(all_teams, key=lambda x: x["def_epa"])  # menor = melhor defesa

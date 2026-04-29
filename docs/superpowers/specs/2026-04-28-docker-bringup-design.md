@@ -2,7 +2,7 @@
 
 **Data:** 2026-04-28
 **Autor:** Claude (Opus 4.7) + @mauryneto010
-**Status:** Aprovado, aguardando execução
+**Status:** ✅ Executado em 2026-04-28 — PASS (com fixes)
 
 ---
 
@@ -181,6 +181,102 @@ Nenhuma — escopo travado em "fazer rodar e testar o que existe".
 
 ## Apêndice — Falhas e Fixes
 
-*(Preenchido durante execução. Cada entrada: timestamp, sintoma, diagnóstico, fix aplicado.)*
+### Execução em 2026-04-28 (concluída em 2026-04-29 ~02h BRT)
+
+**Ambiente:** Windows 11 + Docker Desktop 29.4.1 + Git Bash. 16 cores, 15.6 GB RAM, 484 GB livre em D:.
+
+#### Fase 1 — Pre-flight Environment
+- ✓ Docker daemon ativo
+- ✓ CPU/RAM suficientes
+- ✓ Portas 5173, 8000 livres
+- ⚠ **Porta 11434 ocupada**: usuário tinha Ollama nativo rodando (`C:\Users\User\AppData\Local\Programs\Ollama\ollama.exe`, PID 7516). Já tinha `llama3:latest` (4.6GB) baixado.
+  - **Decisão:** opção B do plano de fallback — manter Ollama nativo, apontar backend pra ele via `host.docker.internal`. Economizou ~4GB de re-download.
+  - **Fix aplicado em `docker-compose.yml`:** removidos serviços `ollama` e `ollama-init`; adicionado `extra_hosts: host.docker.internal:host-gateway`; mudado `OLLAMA_BASE_URL=http://host.docker.internal:11434`.
+
+#### Fase 2 — Pre-flight Code
+- ✓ `entrypoint.sh` com LF puro (0 caracteres CR detectados via `od -c | grep -c '\r'`)
+- ✓ Permissão executável tratada pelo Dockerfile (`chmod +x /entrypoint.sh`)
+
+#### Fase 3 — Build
+- Build em cache (imagens já existiam de tentativa anterior). Tempo: ~30s. Sem erros.
+- Após fix de `requirements.txt` (próxima fase), rebuild durou ~3 min.
+
+#### Fase 4 — Bringup (3 falhas → 3 fixes)
+
+**Falha 1: `nfl_data_py==0.1.5` não baixava dados de 2022/2023/2024**
+- **Sintoma:** `Data not available for 2022/2023/2024` durante `_load_or_fetch`. Cache vazio era salvo no volume, container entrava em restart loop com `KeyError: 'pass'` em `features.py:44`.
+- **Diagnóstico:** versão 0.1.5 (de 2022) é incompatível com a infra atual do `nflverse-data` que migrou pra parquet.
+- **Fix:** `requirements.txt`: `nfl_data_py==0.1.5` → `nfl_data_py==0.3.3`.
+- **Validado:** teste em container ad-hoc retornou 49.492 linhas/397 colunas pra 2024 sozinho.
+
+**Falha 2: Conflito pandas 2.2.2 vs nfl_data_py 0.3.3**
+- **Sintoma:** `pip install` falhou com `ResolutionImpossible`. `nfl_data_py 0.3.3` quer `pandas<2.0`.
+- **Fix:** `requirements.txt`:
+  - `pandas==2.2.2` → `pandas>=1.5.3,<2.0`
+  - `numpy==1.26.4` → `numpy>=1.23,<2.0`
+- **Validado:** rebuild do backend bem-sucedido.
+
+**Falha 3: Volumes Docker com cache corrompido após primeira tentativa**
+- **Sintoma:** mesmo após mudar `nfl_data_py`, o container ainda lia o `pbp_2022_2023_2024.pkl` vazio do volume (358 bytes) e quebrava no mesmo lugar.
+- **Fix:** `docker compose down -v` (com autorização do usuário) → recriou volumes vazios → próximo bringup baixou dados frescos.
+- **Resultado:** 148.591 jogadas baixadas, 854 jogos no calendário, modelo XGBoost treinado e salvo, ChromaDB indexado com 15 docs.
+
+#### Fase 5 — Smoke Tests Backend (3 falhas → 3 fixes)
+
+**Falha 4: `/ml/model-info` retornava 500**
+- **Sintoma:** `ValueError: 'numpy.float32' object is not iterable` durante serialização FastAPI.
+- **Diagnóstico:** o `.pkl` do XGBoost contém `numpy.float32` no `feature_importance`, e FastAPI/jsonable_encoder não lida.
+- **Fix:** `ml/predictor.py` — adicionada função `_to_jsonable()` que converte `np.floating`, `np.integer`, `np.ndarray` recursivamente; `load_model_metrics()` passou a aplicar essa conversão.
+- **Validado:** endpoint retorna `accuracy: 0.6074`, `roc_auc: 0.6319`, `cv_roc_auc_mean: 0.6636`, `feature_importance: {...}` com floats puros.
+
+**Falha 5: `llama3` não suporta tool calling**
+- **Sintoma:** `/agent/ask` retornava 400 do Ollama: `registry.ollama.ai/library/llama3:latest does not support tools`.
+- **Diagnóstico:** o modelo base `llama3` (8B, 2024-04) não foi treinado para function/tool calling. Função foi introduzida no `llama3.1`.
+- **Fix:** `ollama pull llama3.1` (4.9 GB) + `OLLAMA_MODEL=llama3.1` em `docker-compose.yml` e `.env` + restart do backend.
+- **Validado:** tool calling funcional, agent responde em PT-BR usando ferramentas.
+
+**Falha 6: llama3.1 retorna args de tools como string ao invés de int**
+- **Sintoma:** `/agent/ask` retornava `Erro no agente: slice indices must be integers or None or have an __index__ method`. Llama3.1 mandava `top_n: "1"` (string) apesar do schema dizer `integer`.
+- **Diagnóstico:** comportamento conhecido de modelos open-source com tool calling; o tipo do JSON vai como string.
+- **Fix:** `agent/tools.py` — coerção defensiva `int(top_n)` em `_get_team_rankings`, `int(last_games)` em `_check_qb_hot_seat`. Tipos das funções afrouxados (`top_n=5` ao invés de `top_n: int = 5`).
+- **Validado:** agent retornou "BAL com EPA 0.2027 é o melhor ataque" em 2.7s, com `tools_used=['get_team_rankings']`, `iterations=2`.
+
+#### Resultados finais
+
+**Backend smoke tests:** 11/11 ✓
+| # | Endpoint | Status |
+|---|---|---|
+| 5.1 | `GET /health` | ✓ |
+| 5.2 | `GET /` | ✓ |
+| 5.3 | `GET /ml/teams` | ✓ (32 times) |
+| 5.4 | `GET /ml/matchup/KC/SF` | ✓ (KC 79.1%) |
+| 5.5 | `GET /ml/model-info` | ✓ após fix #4 |
+| 5.6 | `GET /rag/status` | ✓ (15 docs) |
+| 5.7 | `POST /rag/chat` | ✓ após warmup do llama3.1 |
+| 5.8 | `POST /agent/ask` | ✓ após fixes #5 e #6 |
+| 5.9 | `GET /vision/formations/data` | ✓ (36.725 jogadas) |
+| 5.10 | `GET /vision/formations/diagram/...` | ✓ (PNG 40k bytes) |
+| 5.11 | `POST /vision/analyze-image` | ✓ (7 círculos detectados) |
+
+**Frontend smoke tests:** 6/6 ✓ (validados pelo usuário no browser)
+
+#### Observações fora de escopo (oportunidades futuras)
+
+- **RAG em inglês**: llama3.1 às vezes ignora o prompt PT-BR no `/rag/chat`. Mitigação possível: reforçar system prompt + few-shot examples.
+- **Telemetria do ChromaDB**: warnings inofensivos no log: `Failed to send telemetry event ClientStartEvent: capture() takes 1 positional argument but 3 were given`. Sem impacto funcional.
+- **README desatualizado** (referenciava LangGraph e YOLOv8): atualizado na Task 7.
+- **Conflito de merge git**: durante a Task 7 o README apresentava marcadores `<<<<<<< HEAD ... >>>>>>> cdb0430...`. Resolvido via Write completo. Origem desconhecida (provável git pull externo durante a sessão).
+
+#### Métricas
+
+- **Tempo total de execução**: ~2h (com pausas pra decisões do usuário)
+- **Tempo de bringup do zero**: ~6 min após fixes (148k linhas baixadas + 1m treino + ingest)
+- **Modificações em código**: 5 arquivos
+  - `docker-compose.yml` — Ollama nativo + extra_hosts
+  - `backend/requirements.txt` — nfl_data_py + pandas pin
+  - `backend/ml/predictor.py` — `_to_jsonable()` helper
+  - `backend/agent/tools.py` — coerção de int em 2 tools
+  - `.env` — `OLLAMA_MODEL=llama3.1`
+- **Modificações em docs**: 2 arquivos (`README.md`, este apêndice)
 
 ---

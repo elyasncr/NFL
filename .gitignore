@@ -2,13 +2,14 @@
 backend/data_cache/
 backend/models/*.pkl
 backend/chroma_db/
-
+docs/superpowers
 # Env
 .env
 
 # Docker
 .dockerignore
-
+.claude
+.superpowers
 # Python
 __pycache__/
 *.pyc

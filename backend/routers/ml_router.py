@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from data.loader import get_pbp_data
 from ml.features import get_qb_hot_seat, get_qb_cpoe_stats, calculate_player_props
 from ml.predictor import predict_matchup, get_all_teams_ranking, get_team_stats, load_model_metrics
+from ml.teams_info import get_teams_info
 from config import settings
 
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
@@ -102,3 +103,13 @@ def model_info():
             "instructions": "Execute: python -m ml.train"
         }
     return {"status": "Modelo carregado", **metrics}
+
+
+@router.get("/teams-info")
+def teams_info():
+    """
+    Metadata dos 32 times: nome completo, cidade, apelido, conferência,
+    divisão, cor primária/secundária (hex) e URL do logo ESPN.
+    Cacheado em memória.
+    """
+    return get_teams_info()
