@@ -2,7 +2,7 @@
 backend/data_cache/
 backend/models/*.pkl
 backend/chroma_db/
-docs/superpowers
+docs/superpowers/
 # Env
 .env
 
