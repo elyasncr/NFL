@@ -120,7 +120,12 @@ def _front4() -> list:
 
 
 def _lbs(n: int) -> list:
-    xs = {2: [-1.5, 1.5], 3: [-2.5, 0, 2.5]}[n]
+    if n == 2:
+        xs = [-1.5, 1.5]
+    elif n == 3:
+        xs = [-2.5, 0, 2.5]
+    else:
+        raise ValueError(f"_lbs: n deve ser 2 ou 3, recebeu {n}")
     return [{"x": x, "y": 3.2, "pos": "LB", "unit": "lb", "color": "#f57c00"} for x in xs]
 
 
