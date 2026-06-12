@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-06-12 22:37",
+  "timestamp": "2026-06-12 22:39",
   "retrieval": {
     "summary": {
       "items": 30,
       "errors": 0,
-      "hit_at_1": 0.567,
-      "hit_at_3": 0.867,
-      "mrr": 0.697
+      "hit_at_1": 0.633,
+      "hit_at_3": 0.933,
+      "mrr": 0.764
     },
     "per_item": [
       {
@@ -308,22 +308,22 @@
       },
       {
         "id": "sb_lx_campeao",
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "mrr": 0.0,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
         "retrieved": [
-          "teams_context_2024",
+          "teams_context_2025",
           "ml_win_prediction",
           "formations_defense"
         ]
       },
       {
         "id": "temporada_2025",
-        "hit_at_1": false,
-        "hit_at_3": false,
-        "mrr": 0.0,
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
         "retrieved": [
-          "teams_context_2024",
+          "teams_context_2025",
           "ml_win_prediction",
           "formations_defense"
         ]

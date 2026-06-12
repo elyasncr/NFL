@@ -61,15 +61,22 @@ def ingest_documents(force: bool = False) -> dict:
     collection = get_collection(client)
 
     # Verifica se já tem documentos
-    existing_count = collection.count()
     documents = get_all_documents_text()
+    expected_ids = {doc["id"] for doc in documents}
+    existing_ids = set(collection.get()["ids"])
 
-    if existing_count >= len(documents) and not force:
+    if existing_ids == expected_ids and not force:
         return {
             "status": "already_indexed",
-            "documents": existing_count,
-            "message": f"{existing_count} documentos já indexados. Use force=True para re-indexar."
+            "documents": len(existing_ids),
+            "message": f"{len(existing_ids)} documentos já indexados. Use force=True para re-indexar."
         }
+
+    # IDs divergentes (docs renomeados/removidos): upsert não basta, reconstrói
+    if existing_ids - expected_ids:
+        client.delete_collection("nfl_knowledge")
+        collection = get_collection(client)
+        print(f"[RAG] Índice desatualizado ({existing_ids - expected_ids}) — reconstruindo.")
 
     print(f"[RAG] Indexando {len(documents)} documentos no ChromaDB...")
 
