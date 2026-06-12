@@ -50,11 +50,10 @@ def team_formations(team: str = None, season: int = None):
     """Formações ofensivas reais + coberturas/personnel defensivos por time."""
     year = season or settings.current_season
     pbp = get_pbp_data([year])
-    result = analyze_team_formations(pbp, team=team)
+    result = analyze_team_formations(pbp, team=team.upper() if team else None)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
-    result["season"] = year
-    return result
+    return {**result, "season": year}
 
 
 @router.get("/team-formations/diagram/{side}/{tag}")
@@ -68,6 +67,8 @@ def team_formation_diagram(side: str, tag: str, team: str = None, theme: str = "
     if not template:
         raise HTTPException(status_code=404, detail=f"Disponíveis ({side}): {list(templates.keys())}")
     img_b64 = generate_team_diagram(side, tag, team=team.upper() if team else None, theme=theme)
+    if img_b64 is None:
+        raise HTTPException(status_code=500, detail="Falha ao gerar o diagrama.")
     return {
         "tag": tag,
         "side": side,
