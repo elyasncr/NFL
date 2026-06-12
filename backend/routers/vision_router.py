@@ -10,6 +10,7 @@ from vision.formation_analyzer import (
     analyze_team_formations,
     generate_formation_diagram,
     generate_team_diagram,
+    generate_matchup_diagram,
     analyze_uploaded_image,
     FORMATION_TEMPLATES,
     OFFENSE_FORMATION_TEMPLATES,
@@ -76,6 +77,41 @@ def team_formation_diagram(side: str, tag: str, team: str = None, theme: str = "
         "description": template["description"],
         "image_base64": img_b64,
         "mime_type": "image/png",
+    }
+
+
+@router.get("/matchup-diagram/{off_team}/{def_team}")
+def matchup_diagram(off_team: str, def_team: str, season: int = None, theme: str = "dark"):
+    """Simulação: formação mais usada do ataque vs cobertura mais usada da defesa."""
+    off_team, def_team = off_team.upper(), def_team.upper()
+    if off_team == def_team:
+        raise HTTPException(status_code=400, detail="Escolha dois times diferentes.")
+    year = season or settings.current_season
+    pbp = get_pbp_data([year])
+
+    off_result = analyze_team_formations(pbp, team=off_team)
+    if "error" in off_result:
+        raise HTTPException(status_code=404, detail=f"Sem dados de ataque pra {off_team} em {year}.")
+    formation = next((f for f in off_result["offense"]["formations"] if f["has_diagram"]), None)
+
+    def_result = analyze_team_formations(pbp, team=def_team)
+    if "error" in def_result:
+        raise HTTPException(status_code=404, detail=f"Sem dados de defesa pra {def_team} em {year}.")
+    coverage = next((c for c in def_result["defense"]["coverages"]["items"] if c["has_diagram"]), None)
+
+    if not formation or not coverage:
+        raise HTTPException(status_code=404, detail="Sem formação/cobertura com diagrama pra esse confronto.")
+
+    img_b64 = generate_matchup_diagram(formation["tag"], coverage["tag"], off_team, def_team, theme=theme)
+    if img_b64 is None:
+        raise HTTPException(status_code=500, detail="Falha ao gerar o diagrama.")
+    return {
+        "off_team": off_team, "def_team": def_team, "season": year,
+        "formation": {"tag": formation["tag"], "label": formation["label"],
+                      "usage_pct": formation["usage_pct"], "epa_mean": formation["epa_mean"]},
+        "coverage": {"tag": coverage["tag"], "label": coverage["label"],
+                     "usage_pct": coverage["usage_pct"], "epa_allowed": coverage["epa_allowed"]},
+        "image_base64": img_b64, "mime_type": "image/png",
     }
 
 

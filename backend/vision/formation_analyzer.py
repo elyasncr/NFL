@@ -678,7 +678,8 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
                     defense_colors: Optional[dict] = None,
                     offense_label: str = "Ataque",
                     defense_label: str = "Front 7") -> str:
-    """Renderiza um template (offense/defense) num campo matplotlib → PNG base64."""
+    """Renderiza um template (offense e/ou defense) num campo matplotlib → PNG base64.
+    offense_colors/defense_colors pintam cada lado de forma independente (campo combinado)."""
     bg_color = "#0b0f1a" if theme == "dark" else "#f1f8e9"
     field_color = "#0d2e0d" if theme == "dark" else "#2e7d32"
     text_color = "white" if theme == "dark" else "black"
@@ -808,6 +809,25 @@ def compose_matchup_template(off_tag: str, cov_tag: str) -> Optional[dict]:
     if not off or not cov:
         return None
     return {"offense": off["offense"], "defense": cov["defense"]}
+
+
+@lru_cache(maxsize=256)
+def generate_matchup_diagram(off_tag: str, cov_tag: str, off_team: str, def_team: str,
+                             theme: str = "dark") -> Optional[str]:
+    """Simulação de confronto: formação do off_team vs cobertura do def_team, cada um nas suas cores."""
+    template = compose_matchup_template(off_tag, cov_tag)
+    if not template:
+        return None
+    off_label = OFFENSE_FORMATION_TEMPLATES[off_tag]["label"]
+    cov_label = COVERAGE_TEMPLATES[cov_tag]["label"]
+    title = f"{off_label} ({off_team}) × {cov_label} ({def_team})"
+    return _render_diagram(
+        template, title, theme=theme,
+        offense_colors=_team_colors(off_team),
+        defense_colors=_team_colors(def_team),
+        offense_label=f"Ataque {off_team}",
+        defense_label=f"Front 7 {def_team}",
+    )
 
 
 # ─────────────────────────────────────────
