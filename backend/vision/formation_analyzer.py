@@ -26,6 +26,36 @@ import pandas as pd
 
 
 # ─────────────────────────────────────────
+# 0. PERSONNEL DEFENSIVO (parse + classificação)
+# ─────────────────────────────────────────
+
+# O pbp tem 2 formatos: agregado ("4 DL, 2 LB, 5 DB") e detalhado
+# ("3 CB, 2 DE, 2 DT, 1 FS, 1 MLB, 1 OLB, 1 SS"). Mapeia posição → unidade.
+_POS_UNIT = {
+    "DL": "dl", "DE": "dl", "DT": "dl", "NT": "dl",
+    "LB": "lb", "MLB": "lb", "OLB": "lb", "ILB": "lb",
+    "DB": "db", "CB": "db", "FS": "db", "SS": "db", "S": "db",
+}
+
+
+def parse_defense_personnel(value) -> Optional[dict]:
+    """'4 DL, 2 LB, 5 DB' → {'dl': 4, 'lb': 2, 'db': 5}. Inválido → None."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    counts = {"dl": 0, "lb": 0, "db": 0}
+    found = False
+    for token in value.split(","):
+        parts = token.strip().split()
+        if len(parts) != 2 or not parts[0].isdigit():
+            continue
+        unit = _POS_UNIT.get(parts[1].upper())
+        if unit:
+            counts[unit] += int(parts[0])
+            found = True
+    return counts if found else None
+
+
+# ─────────────────────────────────────────
 # 1. ANÁLISE DE FORMAÇÕES DOS DADOS PBP
 # ─────────────────────────────────────────
 
