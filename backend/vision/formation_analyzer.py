@@ -201,7 +201,6 @@ OFFENSE_FORMATION_TEMPLATES = {
             {"x": 0, "y": -5, "pos": "RB", "unit": "back", "color": "#43a047"},
             {"x": -5.2, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
             {"x": 4, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
-            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
         ],
     },
     "WILDCAT": {
@@ -212,6 +211,7 @@ OFFENSE_FORMATION_TEMPLATES = {
             {"x": 0, "y": -4.5, "pos": "RB", "unit": "back", "color": "#43a047"},
             {"x": -7, "y": -0.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
             {"x": 3, "y": -1.2, "pos": "Jet", "unit": "back", "color": "#00acc1"},
+            {"x": -3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
             {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
             {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
         ],

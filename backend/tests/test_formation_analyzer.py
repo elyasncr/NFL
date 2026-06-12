@@ -166,6 +166,11 @@ def test_todas_tags_ofensivas_tem_template():
 
 
 @pytest.mark.parametrize("tag", OFFENSE_TAGS)
+def test_template_ofensivo_tem_11_jogadores(tag):
+    assert len(OFFENSE_FORMATION_TEMPLATES[tag]["offense"]) == 11
+
+
+@pytest.mark.parametrize("tag", OFFENSE_TAGS)
 def test_template_ofensivo_renderiza(tag):
     img = generate_team_diagram("offense", tag)
     assert img is not None and len(img) > 1000   # base64 de PNG real
