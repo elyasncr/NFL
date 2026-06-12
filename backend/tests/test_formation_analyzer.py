@@ -248,6 +248,20 @@ def test_compose_matchup_template_tag_invalida():
     assert compose_matchup_template("SHOTGUN", "NOPE") is None
 
 
+def test_generate_matchup_diagram(monkeypatch):
+    from vision import formation_analyzer as fa
+    monkeypatch.setattr(
+        fa, "_team_colors",
+        lambda team: {"primary": "#ff0000", "secondary": "#00ff00"} if team else None,
+    )
+    fa.generate_matchup_diagram.cache_clear()
+    img = fa.generate_matchup_diagram("SHOTGUN", "COVER_3", "NE", "SEA")
+    assert img and len(img) > 1000
+    assert fa.generate_matchup_diagram("NOPE", "COVER_3", "NE", "SEA") is None
+    assert fa.generate_matchup_diagram("SHOTGUN", "NOPE", "NE", "SEA") is None
+    fa.generate_matchup_diagram.cache_clear()
+
+
 def test_render_combinado_com_cores_dos_dois_times():
     from vision import formation_analyzer as fa
     template = fa.compose_matchup_template("SHOTGUN", "COVER_2")
