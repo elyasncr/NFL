@@ -68,6 +68,36 @@ def classify_db_package(db_count) -> str:
     return "OUTROS"
 
 
+# Labels PT pras tags reais do pbp (offense_formation)
+TAG_LABELS = {
+    "SHOTGUN": "Shotgun",
+    "UNDER CENTER": "Under Center",
+    "SINGLEBACK": "Singleback",
+    "PISTOL": "Pistol",
+    "EMPTY": "Empty",
+    "I_FORM": "I-Formation",
+    "JUMBO": "Jumbo",
+    "WILDCAT": "Wildcat",
+}
+
+COVERAGE_LABELS = {
+    "COVER_0": "Cover 0",
+    "COVER_1": "Cover 1",
+    "COVER_2": "Cover 2",
+    "COVER_3": "Cover 3",
+    "COVER_4": "Cover 4 (Quarters)",
+    "COVER_6": "Cover 6",
+    "2_MAN": "2-Man",
+    "OUTRAS": "Outras",
+}
+
+SMALL_SAMPLE_THRESHOLD = 20
+
+# Placeholders — preenchidos com templates reais nas Tasks 5 e 6.
+OFFENSE_FORMATION_TEMPLATES: dict = {}
+COVERAGE_TEMPLATES: dict = {}
+
+
 # ─────────────────────────────────────────
 # 1. ANÁLISE DE FORMAÇÕES DOS DADOS PBP
 # ─────────────────────────────────────────
@@ -158,6 +188,93 @@ def analyze_formations_from_pbp(pbp: pd.DataFrame, team: Optional[str] = None) -
         "formations": formation_stats.to_dict(orient="records"),
         "chart": chart_data,
         "insight": insight,
+    }
+
+
+def _offense_insight(formations: list) -> str:
+    if not formations:
+        return "Sem jogadas com tag de formação nesse filtro."
+    top = formations[0]
+    relevant = [f for f in formations if f["usage_pct"] >= 5]
+    best = max(relevant, key=lambda f: f["epa_mean"]) if relevant else top
+    return (
+        f"**{top['label']}** foi a formação mais usada ({top['usage_pct']}% das jogadas). "
+        f"A mais eficiente (uso ≥5%) foi **{best['label']}** (EPA {best['epa_mean']:+.3f}/jogada)."
+    )
+
+
+def _coverage_insight(items: list) -> str:
+    if not items:
+        return "Sem jogadas com tag de cobertura nesse filtro."
+    top = items[0]
+    relevant = [i for i in items if i["usage_pct"] >= 5 and i["tag"] != "OUTRAS"]
+    best = min(relevant, key=lambda i: i["epa_allowed"]) if relevant else top
+    return (
+        f"Cobertura mais usada: **{top['label']}** ({top['usage_pct']}% dos passes defendidos). "
+        f"Melhor EPA permitido (uso ≥5%): **{best['label']}** ({best['epa_allowed']:+.3f} — menor é melhor)."
+    )
+
+
+def analyze_team_formations(pbp: pd.DataFrame, team: Optional[str] = None) -> dict:
+    """
+    Visão por time: formações ofensivas reais (offense_formation) +
+    defesa (coberturas + personnel). team=None → liga toda.
+    """
+    team = team.upper() if team else None
+
+    # ── ATAQUE ──
+    off = pbp[pbp["posteam"] == team] if team else pbp
+    off_plays = off[
+        ((off["pass"] == 1) | (off["rush"] == 1))
+        & off["epa"].notna()
+        & off["posteam"].notna()
+    ]
+    if off_plays.empty:
+        return {"error": "Sem jogadas pra esse filtro. Tenta outro time ou temporada."}
+
+    tagged = off_plays[off_plays["offense_formation"].notna()]
+    formations = []
+    if not tagged.empty:
+        grouped = (
+            tagged.groupby("offense_formation")
+            .agg(plays=("epa", "count"), epa_mean=("epa", "mean"), success_rate=("success", "mean"))
+            .reset_index()
+            .sort_values("plays", ascending=False)
+        )
+        total_tagged = len(tagged)
+        for _, r in grouped.iterrows():
+            tag = r["offense_formation"]
+            formations.append({
+                "tag": tag,
+                "label": TAG_LABELS.get(tag, tag.title()),
+                "usage_pct": round(r["plays"] / total_tagged * 100, 1),
+                "plays": int(r["plays"]),
+                "epa_mean": round(r["epa_mean"], 3),
+                "success_rate": round(r["success_rate"] * 100, 1),
+                "has_diagram": tag in OFFENSE_FORMATION_TEMPLATES,
+                "small_sample": bool(r["plays"] < SMALL_SAMPLE_THRESHOLD),
+            })
+
+    return {
+        "team": team or "Liga Toda",
+        "offense": {
+            "total_plays": len(off_plays),
+            "tagged_plays": len(tagged),
+            "formations": formations,
+            "insight": _offense_insight(formations),
+        },
+        "defense": _analyze_defense(pbp, team),
+    }
+
+
+def _analyze_defense(pbp: pd.DataFrame, team: Optional[str]) -> dict:
+    # Implementação completa na Task 4
+    return {
+        "coverages": {"tagged_plays": 0, "items": [], "insight": ""},
+        "personnel": {
+            "base_pct": 0.0, "nickel_pct": 0.0, "dime_pct": 0.0, "other_pct": 0.0,
+            "avg_box": None, "blitz_rate": None, "snaps": 0,
+        },
     }
 
 
