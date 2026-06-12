@@ -7,9 +7,13 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from urllib.parse import unquote
 from vision.formation_analyzer import (
     analyze_formations_from_pbp,
+    analyze_team_formations,
     generate_formation_diagram,
+    generate_team_diagram,
     analyze_uploaded_image,
     FORMATION_TEMPLATES,
+    OFFENSE_FORMATION_TEMPLATES,
+    COVERAGE_TEMPLATES,
 )
 from data.loader import get_pbp_data
 from config import settings
@@ -39,6 +43,40 @@ def formations_data(team: str = None, season: int = None):
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
+
+
+@router.get("/team-formations")
+def team_formations(team: str = None, season: int = None):
+    """Formações ofensivas reais + coberturas/personnel defensivos por time."""
+    year = season or settings.current_season
+    pbp = get_pbp_data([year])
+    result = analyze_team_formations(pbp, team=team.upper() if team else None)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return {**result, "season": year}
+
+
+@router.get("/team-formations/diagram/{side}/{tag}")
+def team_formation_diagram(side: str, tag: str, team: str = None, theme: str = "dark"):
+    """Diagrama de formação (offense) ou cobertura (defense), nas cores do time."""
+    if side not in ("offense", "defense"):
+        raise HTTPException(status_code=400, detail="side deve ser 'offense' ou 'defense'.")
+    tag = unquote(tag).upper()
+    templates = OFFENSE_FORMATION_TEMPLATES if side == "offense" else COVERAGE_TEMPLATES
+    template = templates.get(tag)
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Disponíveis ({side}): {list(templates.keys())}")
+    img_b64 = generate_team_diagram(side, tag, team=team.upper() if team else None, theme=theme)
+    if img_b64 is None:
+        raise HTTPException(status_code=500, detail="Falha ao gerar o diagrama.")
+    return {
+        "tag": tag,
+        "side": side,
+        "formation": template["label"],
+        "description": template["description"],
+        "image_base64": img_b64,
+        "mime_type": "image/png",
+    }
 
 
 @router.get("/formations/diagram/{formation_name}")
