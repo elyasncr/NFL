@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-12 22:39",
+  "timestamp": "2026-06-12 22:54",
   "retrieval": {
     "summary": {
       "items": 30,
@@ -338,6 +338,354 @@
           "ml_rag_agent",
           "rules_downs"
         ]
+      }
+    ]
+  },
+  "rag": {
+    "summary": {
+      "items": 30,
+      "errors": 0,
+      "fact_coverage": 0.95,
+      "judge_score": 4.533
+    },
+    "per_item": [
+      {
+        "id": "epa_definicao",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto original e apresenta uma interpretação correta do conceito de EPA (Expected Points Added), incluindo exemplos práticos e limitações da métrica."
+      },
+      {
+        "id": "epa_zero",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua interpretação de que uma média de EPA de 0 indica um desempenho neutro. No entanto, ela poderia ter sido mais completa se mencionasse a importância da comparação com a média da liga ou a consideração das circunstâncias específicas do jogo."
+      },
+      {
+        "id": "epa_vs_jardas",
+        "fact_coverage": 0.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em todas as suas afirmações, fornecendo uma explicação completa sobre por que a ERA é melhor do que as jardas para medir eficiência."
+      },
+      {
+        "id": "cpoe_definicao",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua interpretação do CPOE. No entanto, ela não responde explicitamente à pergunta de forma completa, pois apenas descreve o conceito sem fornecer uma definição formal ou explicação detalhada da sigla."
+      },
+      {
+        "id": "cpoe_qb",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua interpretação do CPOE. Ela também responde completamente à pergunta."
+      },
+      {
+        "id": "success_definicao",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em todos os aspectos, fornecendo uma definição precisa do Success Rate e suas implicações para a avaliação de times ofensivos."
+      },
+      {
+        "id": "air_yards",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto original e apresenta informações precisas sobre Air Yards, incluindo as categorias de deep passing, intermediate e short, além da média da liga em Air Yards por tentativa."
+      },
+      {
+        "id": "turnover_valor",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua interpretação dos pontos esperados por posição. No entanto, ela não explora completamente a complexidade do impacto de um turnover na estrutura do jogo, especialmente considerando as decisões estratégicas que podem ser tomadas após o turno sobre."
+      },
+      {
+        "id": "field_position",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto, correta em suas afirmações e completa na explicação da importância da posição de campo no futebol americano."
+      },
+      {
+        "id": "downs_sistema",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua descrição do sistema de downs, mas não é completa pois omite a explicação das formações ofensivas e esquemas defensivos mencionados no contexto."
+      },
+      {
+        "id": "downs_quarto",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em suas afirmações sobre as opções de um time no quarto down."
+      },
+      {
+        "id": "downs_first",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fidelidade e correta em relação ao contexto fornecido, mas não é completa pois não menciona a possibilidade de o time conquistar um primeiro down através de uma jogada de ganho em qualquer das quatro downs."
+      },
+      {
+        "id": "jogo_duracao",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fidelidade e correta em relação ao contexto, mas não menciona explicitamente o tempo adicional para prorrogação."
+      },
+      {
+        "id": "jogo_objetivo",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto, correta em todos os pontos e completa, abrangendo todas as formas de marcar pontos no futebol americano."
+      },
+      {
+        "id": "jogo_posse",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua explicação da alternância entre ataque e defesa. No entanto, ela não menciona explicitamente a importância do sistema de downs na determinação da posse da bola, o que poderia ter sido incluído para torná-la mais completa."
+      },
+      {
+        "id": "penalidade_holding",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em todos os aspectos, fornecendo uma descrição precisa da penalidade de holding e seu impacto no jogo."
+      },
+      {
+        "id": "penalidade_pi",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fidelidade e correta em relação ao contexto fornecido, mas não aborda completamente a definição de Interferência de Passe (Pass Interference - PI) como uma penalidade aplicada à defesa."
+      },
+      {
+        "id": "pontuacao_td",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em relação à pontuação de um touchdown, além de fornecer uma explicação completa sobre a conversão de dois pontos."
+      },
+      {
+        "id": "pontuacao_fg",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta, respondendo diretamente à pergunta sobre a pontuação de um Field Goal."
+      },
+      {
+        "id": "pontuacao_2pt",
+        "fact_coverage": 0.5,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto fornecido e apresenta informações precisas sobre a Conversão de Dois Pontos na NFL."
+      },
+      {
+        "id": "formacao_shotgun",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto, correta em suas afirmações e completa na resposta à pergunta."
+      },
+      {
+        "id": "formacao_corrida",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua afirmação de que as formações ofensivas mais associadas ao jogo de corrida são o Under Center (I-Formation, Singleback) e Shotgun I. No entanto, ela não menciona a Piston como uma formação híbrida que também pode ser usada para combinar o jogo de corrid"
+      },
+      {
+        "id": "defesa_cover2",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é geralmente correta e completa, mas não menciona a vulnerabilidade da Cobertura Cover 2 contra passes pelo meio do campo de forma clara."
+      },
+      {
+        "id": "defesa_blitz",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua descrição de um blitz e seus riscos."
+      },
+      {
+        "id": "posicao_qb",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em todas as suas afirmações, abordando todas as responsabilidades do quarterback e métricas de avaliação."
+      },
+      {
+        "id": "posicao_ol",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em sua descrição da função da Linha Ofensiva, incluindo suas responsabilidades e componentes."
+      },
+      {
+        "id": "posicao_cb",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto e correta em todos os aspectos, fornecendo uma descrição precisa das responsabilidades de um cornerback no futebol americano."
+      },
+      {
+        "id": "sb_lx_campeao",
+        "fact_coverage": 1.0,
+        "judge_score": 2,
+        "judge_note": "A resposta é parcialmente correta pois menciona os Chiefs como favoritos para retornar ao Super Bowl, mas não responde diretamente à pergunta sobre quais times são favoritos ao Super Bowl na temporada 2025."
+      },
+      {
+        "id": "temporada_2025",
+        "fact_coverage": 1.0,
+        "judge_score": 5,
+        "judge_note": "A resposta é fiel ao contexto recuperado e correta em suas afirmações sobre os times que se destacaram na temporada 2025 da NFL."
+      },
+      {
+        "id": "ml_predicao",
+        "fact_coverage": 1.0,
+        "judge_score": 4,
+        "judge_note": "A resposta é fiel ao contexto e apresenta uma abordagem clara sobre como o modelo de Machine Learning prevê o vencedor de um jogo da NFL. No entanto, não menciona explicitamente a importância do baseline histórico de vitória dos times da casa na NFL (cerca de 57%) em relação à precisão do modelo."
+      }
+    ]
+  },
+  "agent": {
+    "summary": {
+      "items": 12,
+      "errors": 0,
+      "tool_accuracy": 0.917,
+      "avg_iterations": 2.0,
+      "fact_coverage": 0.917
+    },
+    "per_item": [
+      {
+        "id": "stats_kc",
+        "tool_match": true,
+        "expected_tools": [
+          "get_team_stats"
+        ],
+        "tools_used": [
+          "get_team_stats"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "stats_buf",
+        "tool_match": true,
+        "expected_tools": [
+          "get_team_stats"
+        ],
+        "tools_used": [
+          "get_team_stats"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "matchup_kc_buf",
+        "tool_match": true,
+        "expected_tools": [
+          "predict_matchup"
+        ],
+        "tools_used": [
+          "predict_matchup"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "matchup_phi_dal",
+        "tool_match": true,
+        "expected_tools": [
+          "predict_matchup"
+        ],
+        "tools_used": [
+          "predict_matchup"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "hotseat_nyj",
+        "tool_match": true,
+        "expected_tools": [
+          "check_qb_hot_seat"
+        ],
+        "tools_used": [
+          "check_qb_hot_seat"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "hotseat_nyg",
+        "tool_match": true,
+        "expected_tools": [
+          "check_qb_hot_seat"
+        ],
+        "tools_used": [
+          "check_qb_hot_seat"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "conceito_epa",
+        "tool_match": true,
+        "expected_tools": [
+          "search_nfl_knowledge"
+        ],
+        "tools_used": [
+          "search_nfl_knowledge"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "conceito_cover2",
+        "tool_match": true,
+        "expected_tools": [
+          "search_nfl_knowledge"
+        ],
+        "tools_used": [
+          "search_nfl_knowledge"
+        ],
+        "iterations": 2,
+        "fact_coverage": 0.0
+      },
+      {
+        "id": "rankings_geral",
+        "tool_match": true,
+        "expected_tools": [
+          "get_team_rankings"
+        ],
+        "tools_used": [
+          "get_team_rankings"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "rankings_ataque",
+        "tool_match": true,
+        "expected_tools": [
+          "get_team_rankings"
+        ],
+        "tools_used": [
+          "get_team_rankings"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "multi_stats_matchup",
+        "tool_match": false,
+        "expected_tools": [
+          "get_team_stats",
+          "predict_matchup"
+        ],
+        "tools_used": [
+          "predict_matchup"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
+      },
+      {
+        "id": "multi_conceito_ranking",
+        "tool_match": true,
+        "expected_tools": [
+          "search_nfl_knowledge",
+          "get_team_rankings"
+        ],
+        "tools_used": [
+          "search_nfl_knowledge",
+          "get_team_rankings"
+        ],
+        "iterations": 2,
+        "fact_coverage": 1.0
       }
     ]
   }

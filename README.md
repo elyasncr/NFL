@@ -47,6 +47,30 @@ Projeto de portfólio combinando **Machine Learning**, **LLM + RAG**, **Agentes 
 
 > 📝 Nota de dado: a partir de 2023 o NGS público só classifica SHOTGUN / UNDER CENTER / PISTOL. A temporada 2022 tem a taxonomia completa (Empty, I-Form, Singleback, Jumbo, Wildcat) — use o seletor de temporada pra explorar.
 
+## 📏 Evals — medindo o RAG e o Agente
+
+O projeto inclui uma suíte de avaliação própria (`backend/evals/`) com 3 camadas:
+
+1. **Retrieval (determinístico)** — 30 golden questions com documento esperado: hit@1, hit@3 e MRR direto no ChromaDB, sem LLM.
+2. **Respostas RAG** — *fact coverage* (fatos obrigatórios via regex) + **LLM-as-judge local** (llama3.1, temp 0, rubrica ancorada em fidelidade ao contexto recuperado).
+3. **Agente** — *tool accuracy*: a pergunta exige `predict_matchup`? O agente chamou a ferramenta certa?
+
+| Camada | Métrica | Valor |
+|---|---|---|
+| Retrieval | hit@1 / hit@3 / MRR | 0.633 / 0.933 / 0.764 |
+| RAG | fact coverage / judge (1-5) | 0.95 / 4.533 |
+| Agente | tool accuracy / iterações médias | 0.917 / 2.0 |
+
+```bash
+docker compose exec backend python -m evals.run              # completo (precisa do Ollama)
+docker compose exec backend python -m evals.run --retrieval  # só retrieval — segundos, sem LLM
+```
+
+Relatórios completos (por item) em `backend/evals/results/latest.md`. Na primeira rodada, o eval já pagou o investimento: pegou o índice ChromaDB servindo um documento de contexto da temporada errada (`teams_context_2024`) — corrigido com reindexação por comparação de IDs.
+
+> ⚠️ Limitação conhecida: o judge é o mesmo modelo que gera as respostas (llama3.1) e tende a se favorecer.
+> Por isso a rubrica ancora a nota na fidelidade ao contexto recuperado — que é dado — e não em qualidade subjetiva.
+
 ---
 
 ## 🗂 Estrutura
@@ -66,6 +90,7 @@ nfl-analytics/
 │   ├── rag/                    # Módulo 2 — RAG + ChromaDB
 │   ├── agent/                  # Módulo 3 — ReAct + Tool Calling
 │   ├── vision/                 # Módulo 4 — CV
+│   ├── evals/                  # Golden datasets + métricas + judge + runner
 │   └── routers/                # Endpoints FastAPI por módulo
 └── frontend/
     └── src/
