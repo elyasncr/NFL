@@ -1,6 +1,4 @@
 """Testes do Módulo 4 — formation_analyzer. Sem rede: tudo com dados sintéticos."""
-import numpy as np
-import pandas as pd
 import pytest
 
 from vision.formation_analyzer import parse_defense_personnel
