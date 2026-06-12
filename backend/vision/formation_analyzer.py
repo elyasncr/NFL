@@ -94,8 +94,125 @@ COVERAGE_LABELS = {
 
 SMALL_SAMPLE_THRESHOLD = 20
 
-# Placeholders — preenchidos com templates reais nas Tasks 5 e 6.
-COVERAGE_TEMPLATES: dict = {}
+# Ataque de referência (cinza) pros diagramas de cobertura — o protagonista é a defesa.
+_REF_OFFENSE = [
+    {"x": 0, "y": 0, "pos": "C", "unit": "ref", "color": "#5c6470"},
+    {"x": -1.3, "y": 0, "pos": "LG", "unit": "ref", "color": "#5c6470"},
+    {"x": 1.3, "y": 0, "pos": "RG", "unit": "ref", "color": "#5c6470"},
+    {"x": -2.7, "y": 0, "pos": "LT", "unit": "ref", "color": "#5c6470"},
+    {"x": 2.7, "y": 0, "pos": "RT", "unit": "ref", "color": "#5c6470"},
+    {"x": 0, "y": -4.5, "pos": "QB", "unit": "ref", "color": "#5c6470"},
+    {"x": 1.5, "y": -4.5, "pos": "RB", "unit": "ref", "color": "#5c6470"},
+    {"x": -7, "y": 0.5, "pos": "WR", "unit": "ref", "color": "#5c6470"},
+    {"x": 7, "y": 0.5, "pos": "WR", "unit": "ref", "color": "#5c6470"},
+    {"x": -4.5, "y": -1, "pos": "Slot", "unit": "ref", "color": "#5c6470"},
+    {"x": 3.8, "y": 0, "pos": "TE", "unit": "ref", "color": "#5c6470"},
+]
+
+
+def _front4() -> list:
+    return [
+        {"x": -4, "y": 1.5, "pos": "DE", "unit": "dl", "color": "#d32f2f"},
+        {"x": -1.5, "y": 1.5, "pos": "DT", "unit": "dl", "color": "#d32f2f"},
+        {"x": 1, "y": 1.5, "pos": "DT", "unit": "dl", "color": "#d32f2f"},
+        {"x": 3.5, "y": 1.5, "pos": "DE", "unit": "dl", "color": "#d32f2f"},
+    ]
+
+
+def _lbs(n: int) -> list:
+    xs = {2: [-1.5, 1.5], 3: [-2.5, 0, 2.5]}[n]
+    return [{"x": x, "y": 3.2, "pos": "LB", "unit": "lb", "color": "#f57c00"} for x in xs]
+
+
+COVERAGE_TEMPLATES = {
+    "COVER_0": {
+        "label": "Cover 0",
+        "description": "Homem puro SEM safety profundo — todo mundo grudado e pressão máxima. "
+                       "Se um recebedor escapa do seu marcador, é touchdown.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(2) + [
+            {"x": -7, "y": 1.5, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 7, "y": 1.5, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": -4.5, "y": 1.5, "pos": "NB", "unit": "db", "color": "#2e7d32"},
+            {"x": -2.5, "y": 4, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+            {"x": 2.5, "y": 4, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+        ],
+    },
+    "COVER_1": {
+        "label": "Cover 1",
+        "description": "Homem com UM safety profundo no meio (free safety). A cobertura mais "
+                       "comum da NFL: agressiva, mas com um seguro contra a bola longa.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(2) + [
+            {"x": -7, "y": 1.5, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 7, "y": 1.5, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": -4.5, "y": 1.5, "pos": "NB", "unit": "db", "color": "#2e7d32"},
+            {"x": 3, "y": 4.5, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+            {"x": 0, "y": 9, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+        ],
+    },
+    "COVER_2": {
+        "label": "Cover 2",
+        "description": "Dois safeties dividem o campo profundo ao meio; CBs apertam as laterais. "
+                       "Fraqueza clássica: o meio do campo entre os safeties.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(3) + [
+            {"x": -7, "y": 2, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 7, "y": 2, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": -3.5, "y": 8, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+            {"x": 3.5, "y": 8, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+        ],
+    },
+    "COVER_3": {
+        "label": "Cover 3",
+        "description": "Três defensores dividem o campo profundo em terços (2 CBs + FS); o SS "
+                       "desce pra caixa. Forte contra corrida, cede passes curtos nas laterais.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(3) + [
+            {"x": -7, "y": 7, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 7, "y": 7, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 0, "y": 9, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+            {"x": 4.5, "y": 3.8, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+        ],
+    },
+    "COVER_4": {
+        "label": "Cover 4 (Quarters)",
+        "description": "Quatro defensores dividem o fundo em quartos. Máxima proteção contra "
+                       "a bola longa; vulnerável a corridas e passes curtos.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(3) + [
+            {"x": -7, "y": 7, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 7, "y": 7, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": -2.5, "y": 8, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+            {"x": 2.5, "y": 8, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+        ],
+    },
+    "COVER_6": {
+        "label": "Cover 6",
+        "description": "Metade Cover 4, metade Cover 2: quarters de um lado, half do outro. "
+                       "Boa contra ataques que concentram as armas num lado só do campo.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(3) + [
+            {"x": -7, "y": 7, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": -2.5, "y": 8, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+            {"x": 3.5, "y": 8, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+            {"x": 7, "y": 2.5, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+        ],
+    },
+    "2_MAN": {
+        "label": "2-Man",
+        "description": "Homem por baixo com dois safeties profundos. Cobertura grudada com "
+                       "seguro contra a bola longa; sofre contra QBs móveis.",
+        "offense": _REF_OFFENSE,
+        "defense": _front4() + _lbs(2) + [
+            {"x": -7, "y": 2.2, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": 7, "y": 2.2, "pos": "CB", "unit": "db", "color": "#2e7d32"},
+            {"x": -4.5, "y": 2.2, "pos": "NB", "unit": "db", "color": "#2e7d32"},
+            {"x": -3.5, "y": 8.5, "pos": "FS", "unit": "db", "color": "#1b5e20"},
+            {"x": 3.5, "y": 8.5, "pos": "SS", "unit": "db", "color": "#1b5e20"},
+        ],
+    },
+}
 
 
 def _ol(extra_left: bool = False) -> list:

@@ -5,7 +5,7 @@ import pandas as pd
 
 from vision.formation_analyzer import (
     parse_defense_personnel, classify_db_package, analyze_team_formations,
-    generate_team_diagram, OFFENSE_FORMATION_TEMPLATES,
+    generate_team_diagram, OFFENSE_FORMATION_TEMPLATES, COVERAGE_TEMPLATES,
 )
 
 
@@ -182,3 +182,22 @@ def test_tag_desconhecida_retorna_none():
 
 def test_side_invalido_retorna_none():
     assert generate_team_diagram("special_teams", "SHOTGUN") is None
+
+
+COVERAGE_TAGS = ["COVER_0", "COVER_1", "COVER_2", "COVER_3",
+                 "COVER_4", "COVER_6", "2_MAN"]
+
+
+def test_todas_coberturas_tem_template():
+    assert sorted(COVERAGE_TEMPLATES.keys()) == sorted(COVERAGE_TAGS)
+
+
+@pytest.mark.parametrize("tag", COVERAGE_TAGS)
+def test_template_cobertura_renderiza(tag):
+    img = generate_team_diagram("defense", tag)
+    assert img is not None and len(img) > 1000
+
+
+@pytest.mark.parametrize("tag", COVERAGE_TAGS)
+def test_template_cobertura_tem_11_defensores(tag):
+    assert len(COVERAGE_TEMPLATES[tag]["defense"]) == 11
