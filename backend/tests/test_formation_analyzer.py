@@ -6,6 +6,7 @@ import pandas as pd
 from vision.formation_analyzer import (
     parse_defense_personnel, classify_db_package, analyze_team_formations,
     generate_team_diagram, OFFENSE_FORMATION_TEMPLATES, COVERAGE_TEMPLATES,
+    analyze_formations_from_pbp,
 )
 
 
@@ -222,3 +223,12 @@ def test_diagrama_com_cores_do_time(monkeypatch):
     img_cov_plain = fa.generate_team_diagram("defense", "COVER_2", team=None)
     assert img_cov != img_cov_plain
     fa.generate_team_diagram.cache_clear()
+
+
+# ─── analyze_formations_from_pbp com tags reais ───
+
+def test_epa_por_formacao_usa_tags_reais(pbp_ofensivo):
+    result = analyze_formations_from_pbp(pbp_ofensivo, team="KC")
+    # Antes: rótulos derivados ("Shotgun (Passe)"). Agora: labels das tags reais.
+    assert set(result["chart"]["labels"]) == {"Shotgun", "Pistol"}
+    assert result["total_plays"] == 40   # só jogadas com tag

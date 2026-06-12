@@ -348,14 +348,11 @@ OFFENSE_FORMATION_TEMPLATES = {
 def analyze_formations_from_pbp(pbp: pd.DataFrame, team: Optional[str] = None) -> dict:
     """
     Analisa a frequência e eficiência (EPA) de cada formação ofensiva
-    baseado nos dados play-by-play.
+    usando a tag real `offense_formation` do play-by-play (NGS).
+    Jogadas sem tag (~26%) ficam fora da conta.
 
-    nfl_data_py tem as colunas:
-    - shotgun: 1 se o QB está em shotgun
-    - no_huddle: 1 se sem huddle
-    - qb_dropback: 1 se o QB fez dropback para passe
-
-    Derivamos a formação a partir dessas flags.
+    nfl_data_py também tem as flags shotgun/no_huddle/qb_dropback,
+    mas a tag do NGS é mais precisa (SHOTGUN, SINGLEBACK, PISTOL...).
     """
     df = pbp.copy()
     if team:
@@ -371,31 +368,17 @@ def analyze_formations_from_pbp(pbp: pd.DataFrame, team: Optional[str] = None) -
     if plays.empty:
         return {"error": "Dados insuficientes para análise de formações."}
 
-    # Classifica a formação
-    def classify_formation(row):
-        shotgun = row.get("shotgun", 0) == 1
-        no_huddle = row.get("no_huddle", 0) == 1
-        is_pass = row.get("pass", 0) == 1
-        is_rush = row.get("rush", 0) == 1
-
-        if shotgun and no_huddle:
-            return "Hurry-Up Shotgun"
-        elif shotgun and is_pass:
-            return "Shotgun (Passe)"
-        elif shotgun and is_rush:
-            return "Shotgun (Corrida)"
-        elif not shotgun and is_pass:
-            return "Under Center (Passe)"
-        elif not shotgun and is_rush:
-            return "Under Center (Corrida)"
-        else:
-            return "Outra"
-
-    plays["formation"] = plays.apply(classify_formation, axis=1)
+    # Usa a tag real do NGS (≈74% das jogadas) em vez de derivar de shotgun/no_huddle
+    plays = plays[plays["offense_formation"].notna()].copy()
+    if plays.empty:
+        return {"error": "Dados insuficientes para análise de formações."}
+    plays["formation"] = plays["offense_formation"].map(
+        lambda t: TAG_LABELS.get(t, str(t).title())
+    )
 
     # Agrega por formação
     formation_stats = plays.groupby("formation").agg(
-        plays_count=("play_id", "count"),
+        plays_count=("epa", "count"),
         epa_mean=("epa", "mean"),
         epa_total=("epa", "sum"),
         success_rate=("success", "mean"),
