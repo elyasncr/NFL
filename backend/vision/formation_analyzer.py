@@ -55,6 +55,19 @@ def parse_defense_personnel(value) -> Optional[dict]:
     return counts if found else None
 
 
+def classify_db_package(db_count) -> str:
+    """Nº de DBs em campo → pacote: 4=BASE, 5=NICKEL, 6+=DIME, resto=OUTROS."""
+    if db_count is None:
+        return "OUTROS"
+    if db_count == 4:
+        return "BASE"
+    if db_count == 5:
+        return "NICKEL"
+    if db_count >= 6:
+        return "DIME"
+    return "OUTROS"
+
+
 # ─────────────────────────────────────────
 # 1. ANÁLISE DE FORMAÇÕES DOS DADOS PBP
 # ─────────────────────────────────────────

@@ -1,7 +1,7 @@
 """Testes do Módulo 4 — formation_analyzer. Sem rede: tudo com dados sintéticos."""
 import pytest
 
-from vision.formation_analyzer import parse_defense_personnel
+from vision.formation_analyzer import parse_defense_personnel, classify_db_package
 
 
 # ─── parse_defense_personnel ───
@@ -21,3 +21,13 @@ def test_parse_personnel_invalido():
     assert parse_defense_personnel(float("nan")) is None
     assert parse_defense_personnel("texto qualquer") is None
     assert parse_defense_personnel("") is None
+
+
+# ─── classify_db_package ───
+
+@pytest.mark.parametrize("db,expected", [
+    (4, "BASE"), (5, "NICKEL"), (6, "DIME"), (7, "DIME"),
+    (3, "OUTROS"), (None, "OUTROS"),
+])
+def test_classify_db_package(db, expected):
+    assert classify_db_package(db) == expected
