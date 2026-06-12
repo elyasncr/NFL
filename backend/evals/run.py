@@ -72,16 +72,19 @@ def run_retrieval(items: list[dict]) -> dict:
 # ─── Relatórios ───
 
 def build_markdown(results: dict, timestamp: str) -> str:
+    def fmt(v):
+        return "—" if v is None else v
+
     lines = [f"# Eval — {timestamp}", "", "| Camada | Métrica | Valor |", "|---|---|---|"]
     if "retrieval" in results:
         s = results["retrieval"]["summary"]
-        lines.append(f"| Retrieval | hit@1 / hit@3 / MRR | {s['hit_at_1']} / {s['hit_at_3']} / {s['mrr']} |")
+        lines.append(f"| Retrieval | hit@1 / hit@3 / MRR | {fmt(s['hit_at_1'])} / {fmt(s['hit_at_3'])} / {fmt(s['mrr'])} |")
     if "rag" in results:
         s = results["rag"]["summary"]
-        lines.append(f"| RAG | fact coverage / judge (1-5) | {s['fact_coverage']} / {s['judge_score']} |")
+        lines.append(f"| RAG | fact coverage / judge (1-5) | {fmt(s['fact_coverage'])} / {fmt(s['judge_score'])} |")
     if "agent" in results:
         s = results["agent"]["summary"]
-        lines.append(f"| Agente | tool accuracy / iterações médias | {s['tool_accuracy']} / {s['avg_iterations']} |")
+        lines.append(f"| Agente | tool accuracy / iterações médias | {fmt(s['tool_accuracy'])} / {fmt(s['avg_iterations'])} |")
 
     worst = []
     for r in results.get("retrieval", {}).get("per_item", []):

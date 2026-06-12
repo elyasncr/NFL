@@ -24,14 +24,9 @@ fi
 # ── 2. Indexa a base de conhecimento no ChromaDB (RAG) ────────
 echo "[RAG] Verificando base de conhecimento..."
 python -c "
-from rag.ingest import get_indexed_count, ingest_documents
-count = get_indexed_count()
-if count == 0:
-    print('[RAG] Indexando documentos no ChromaDB...')
-    result = ingest_documents()
-    print(f'[RAG] ✓ {result[\"documents\"]} documentos indexados.')
-else:
-    print(f'[RAG] ✓ {count} documentos já indexados.')
+from rag.ingest import ingest_documents
+result = ingest_documents()
+print(f'[RAG] ✓ {result[\"documents\"]} documentos indexados.')
 "
 
 # ── 3. Inicia o servidor FastAPI ──────────────────────────────
