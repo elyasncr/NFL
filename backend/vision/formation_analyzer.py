@@ -793,6 +793,16 @@ def generate_team_diagram(side: str, tag: str, team: Optional[str] = None,
                            team_colors=_team_colors(team), side=side)
 
 
+def compose_matchup_template(off_tag: str, cov_tag: str) -> Optional[dict]:
+    """Campo combinado: ataque de uma formação + defesa de uma cobertura (22 jogadores).
+    Os sistemas de coordenadas já são compatíveis: ataque em y ≤ 0.5, defesa em y ≥ 1.5."""
+    off = OFFENSE_FORMATION_TEMPLATES.get(off_tag)
+    cov = COVERAGE_TEMPLATES.get(cov_tag)
+    if not off or not cov:
+        return None
+    return {"offense": off["offense"], "defense": cov["defense"]}
+
+
 # ─────────────────────────────────────────
 # 3. ANÁLISE DE IMAGEM ENVIADA PELO USUÁRIO
 # ─────────────────────────────────────────

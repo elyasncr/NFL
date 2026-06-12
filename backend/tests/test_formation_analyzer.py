@@ -6,7 +6,7 @@ import pandas as pd
 from vision.formation_analyzer import (
     parse_defense_personnel, classify_db_package, analyze_team_formations,
     generate_team_diagram, OFFENSE_FORMATION_TEMPLATES, COVERAGE_TEMPLATES,
-    analyze_formations_from_pbp,
+    analyze_formations_from_pbp, compose_matchup_template,
 )
 
 
@@ -233,3 +233,16 @@ def test_epa_por_formacao_usa_tags_reais(pbp_ofensivo):
     assert set(result["chart"]["labels"]) == {"Shotgun", "Pistol"}
     assert result["total_plays"] == 40   # só jogadas com tag
     assert result["total_snaps"] == 45   # inclui as 5 sem tag
+
+
+# ─── simulação de confronto (matchup) ───
+
+def test_compose_matchup_template():
+    t = compose_matchup_template("SHOTGUN", "COVER_3")
+    assert len(t["offense"]) == 11
+    assert len(t["defense"]) == 11
+
+
+def test_compose_matchup_template_tag_invalida():
+    assert compose_matchup_template("NOPE", "COVER_3") is None
+    assert compose_matchup_template("SHOTGUN", "NOPE") is None
