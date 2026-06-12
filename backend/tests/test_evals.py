@@ -1,4 +1,8 @@
 """Testes do pacote evals — só funções puras, sem rede/LLM."""
+import json
+import re
+from pathlib import Path
+
 import pytest
 
 from evals.metrics import hit_at_k, mrr, fact_coverage, tool_match, mean
@@ -77,10 +81,6 @@ def test_parse_judge_clamp():
     assert parse_judge_response('{"score": 0}')["score"] == 1
     assert parse_judge_response('{"score": 3.7}')["score"] == 3
 
-
-import json
-import re
-from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "evals" / "data"
 
