@@ -207,11 +207,14 @@ def _coverage_insight(items: list) -> str:
     if not items:
         return "Sem jogadas com tag de cobertura nesse filtro."
     top = items[0]
+    first = f"Cobertura mais usada: **{top['label']}** ({top['usage_pct']}% dos passes defendidos)."
     relevant = [i for i in items if i["usage_pct"] >= 5 and i["tag"] != "OUTRAS"]
-    best = min(relevant, key=lambda i: i["epa_allowed"]) if relevant else top
+    if not relevant:
+        return first
+    best = min(relevant, key=lambda i: i["epa_allowed"])
     return (
-        f"Cobertura mais usada: **{top['label']}** ({top['usage_pct']}% dos passes defendidos). "
-        f"Melhor EPA permitido (uso ≥5%): **{best['label']}** ({best['epa_allowed']:+.3f} — menor é melhor)."
+        f"{first} Melhor EPA permitido (uso ≥5%): "
+        f"**{best['label']}** ({best['epa_allowed']:+.3f} — menor é melhor)."
     )
 
 
@@ -268,12 +271,63 @@ def analyze_team_formations(pbp: pd.DataFrame, team: Optional[str] = None) -> di
 
 
 def _analyze_defense(pbp: pd.DataFrame, team: Optional[str]) -> dict:
-    # Implementação completa na Task 4
+    deff = pbp[pbp["defteam"] == team] if team else pbp
+    def_plays = deff[((deff["pass"] == 1) | (deff["rush"] == 1)) & deff["epa"].notna()]
+
+    # ── Coberturas (≈ jogadas de passe; EPA do ataque = EPA permitido) ──
+    cov = def_plays[def_plays["defense_coverage_type"].notna()].copy()
+    items = []
+    if not cov.empty:
+        cov["cov_group"] = cov["defense_coverage_type"].map(
+            lambda t: t if t in COVERAGE_LABELS else "OUTRAS"
+        )
+        cgrouped = (
+            cov.groupby("cov_group")
+            .agg(plays=("epa", "count"), epa_allowed=("epa", "mean"),
+                 success_allowed=("success", "mean"))
+            .reset_index()
+            .sort_values("plays", ascending=False)
+        )
+        total_cov = len(cov)
+        for _, r in cgrouped.iterrows():
+            tag = r["cov_group"]
+            items.append({
+                "tag": tag,
+                "label": COVERAGE_LABELS.get(tag, "Outras"),
+                "usage_pct": round(r["plays"] / total_cov * 100, 1),
+                "plays": int(r["plays"]),
+                "epa_allowed": round(r["epa_allowed"], 3),
+                "success_rate_allowed": round(r["success_allowed"] * 100, 1),
+                "has_diagram": tag in COVERAGE_TEMPLATES,
+                "small_sample": bool(r["plays"] < SMALL_SAMPLE_THRESHOLD),
+            })
+
+    # ── Personnel / front ──
+    parsed = def_plays["defense_personnel"].map(parse_defense_personnel)
+    valid = parsed.dropna()
+    packages = valid.map(lambda p: classify_db_package(p["db"]))
+    snaps = len(valid)
+
+    def _pct(name: str) -> float:
+        return round(float((packages == name).sum()) / snaps * 100, 1) if snaps else 0.0
+
+    box = def_plays["defenders_in_box"].dropna()
+    rushers = def_plays.loc[def_plays["pass"] == 1, "number_of_pass_rushers"].dropna()
+
     return {
-        "coverages": {"tagged_plays": 0, "items": [], "insight": ""},
+        "coverages": {
+            "tagged_plays": len(cov),
+            "items": items,
+            "insight": _coverage_insight(items),
+        },
         "personnel": {
-            "base_pct": 0.0, "nickel_pct": 0.0, "dime_pct": 0.0, "other_pct": 0.0,
-            "avg_box": None, "blitz_rate": None, "snaps": 0,
+            "base_pct": _pct("BASE"),
+            "nickel_pct": _pct("NICKEL"),
+            "dime_pct": _pct("DIME"),
+            "other_pct": _pct("OUTROS"),
+            "avg_box": round(float(box.mean()), 1) if len(box) else None,
+            "blitz_rate": round(float((rushers >= 5).mean()) * 100, 1) if len(rushers) else None,
+            "snaps": snaps,
         },
     }
 

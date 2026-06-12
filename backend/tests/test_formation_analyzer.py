@@ -87,3 +87,66 @@ def test_liga_toda_sem_filtro(pbp_ofensivo):
 def test_time_sem_jogadas_retorna_erro(pbp_ofensivo):
     result = analyze_team_formations(pbp_ofensivo, team="SEA")
     assert "error" in result
+
+
+# ─── analyze_team_formations: defesa ───
+
+def _def_row(coverage, epa, personnel, box, rushers, success=1):
+    return {
+        "posteam": "DEN", "defteam": "KC", "pass": 1, "rush": 0,
+        "epa": epa, "success": success, "offense_formation": None,
+        "defense_coverage_type": coverage, "defense_personnel": personnel,
+        "defenders_in_box": box, "number_of_pass_rushers": rushers,
+    }
+
+
+@pytest.fixture
+def pbp_defensivo():
+    rows = (
+        [_def_row("COVER_3", 0.2, "4 DL, 2 LB, 5 DB", 6.0, 4.0) for _ in range(20)]
+        + [_def_row("COMBO", -0.4, "2 DL, 3 LB, 6 DB", 7.0, 5.0, success=0) for _ in range(10)]
+        # 2 jogadas ofensivas do KC só pra não cair no guard de "sem jogadas"
+        + [_off_row("KC", "SHOTGUN", 0.1) for _ in range(2)]
+    )
+    return pd.DataFrame(rows)
+
+
+def test_defesa_coberturas(pbp_defensivo):
+    result = analyze_team_formations(pbp_defensivo, team="KC")
+    cov = result["defense"]["coverages"]
+    assert cov["tagged_plays"] == 30
+
+    cover3 = cov["items"][0]
+    assert cover3["tag"] == "COVER_3"
+    assert cover3["label"] == "Cover 3"
+    assert cover3["usage_pct"] == pytest.approx(66.7)
+    assert cover3["plays"] == 20
+    assert cover3["epa_allowed"] == pytest.approx(0.2)
+    assert cover3["success_rate_allowed"] == 100.0
+    assert cover3["small_sample"] is False
+
+    outras = cov["items"][1]                  # COMBO agrupada
+    assert outras["tag"] == "OUTRAS"
+    assert outras["label"] == "Outras"
+    assert outras["usage_pct"] == pytest.approx(33.3)
+    assert outras["has_diagram"] is False
+    assert outras["small_sample"] is True
+
+
+def test_defesa_personnel(pbp_defensivo):
+    result = analyze_team_formations(pbp_defensivo, team="KC")
+    p = result["defense"]["personnel"]
+    assert p["snaps"] == 30
+    assert p["nickel_pct"] == pytest.approx(66.7)   # 20× "5 DB"
+    assert p["dime_pct"] == pytest.approx(33.3)     # 10× "6 DB"
+    assert p["base_pct"] == 0.0
+    assert p["avg_box"] == pytest.approx(6.3)       # (20*6 + 10*7) / 30
+    assert p["blitz_rate"] == pytest.approx(33.3)   # 10 de 30 com 5+ rushers
+
+
+def test_coverage_insight_fallback_so_outras():
+    from vision.formation_analyzer import _coverage_insight
+    items = [{"tag": "OUTRAS", "label": "Outras", "usage_pct": 100.0, "epa_allowed": 0.1}]
+    insight = _coverage_insight(items)
+    assert "mais usada" in insight
+    assert "Melhor EPA" not in insight
