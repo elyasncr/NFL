@@ -7,6 +7,7 @@ import TeamChip from '../components/team/TeamChip'
 import Skeleton from '../components/ui/Skeleton'
 import ErrorState from '../components/ui/ErrorState'
 import EmptyState from '../components/ui/EmptyState'
+import FormationExplorer from '../components/vision/FormationExplorer'
 
 const NFL_TEAMS = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LAC','LAR','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
 
@@ -15,7 +16,6 @@ type Tab = 'data' | 'diagrams' | 'upload'
 export default function Vision() {
   const [activeTab, setActiveTab] = useState<Tab>('data')
   const [selectedTeam, setSelectedTeam] = useState<string>('')
-  const [selectedFormation, setSelectedFormation] = useState<string>('Shotgun Pro Set')
   const [uploadResult, setUploadResult] = useState<any>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -23,17 +23,6 @@ export default function Vision() {
     queryKey: ['formations-data', selectedTeam],
     queryFn: () => nflApi.getFormationsData(selectedTeam || undefined),
     enabled: activeTab === 'data',
-  })
-
-  const { data: formationsList } = useQuery({
-    queryKey: ['formations-list'],
-    queryFn: nflApi.listFormations,
-  })
-
-  const { data: diagram, isLoading: loadingDiagram } = useQuery({
-    queryKey: ['diagram', selectedFormation],
-    queryFn: () => nflApi.getFormationDiagram(selectedFormation),
-    enabled: activeTab === 'diagrams' && !!selectedFormation,
   })
 
   const uploadMutation = useMutation({
@@ -48,7 +37,7 @@ export default function Vision() {
 
   const tabs: Array<{ id: Tab; label: string; icon: any }> = [
     { id: 'data', label: 'EPA por Formação', icon: BarChart2 },
-    { id: 'diagrams', label: 'Diagramas de Campo', icon: Eye },
+    { id: 'diagrams', label: 'Formações por Time', icon: Eye },
     { id: 'upload', label: 'Analisar Imagem', icon: Upload },
   ]
 
@@ -59,7 +48,7 @@ export default function Vision() {
           Visão <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>/ Computer Vision</span>
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          Veja como cada formação se sai em campo, explore diagramas táticos e analise imagens com Computer Vision.
+          Veja como cada formação se sai em campo, explore as formações e coberturas de cada time e analise imagens com Computer Vision.
         </p>
       </div>
 
@@ -166,49 +155,8 @@ export default function Vision() {
         </div>
       )}
 
-      {/* Tab: Diagramas */}
-      {activeTab === 'diagrams' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {formationsList?.formations.map((f: any) => (
-              <button key={f.name} onClick={() => setSelectedFormation(f.name)}
-                className={`btn ${selectedFormation === f.name ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ fontSize: '0.72rem' }}>
-                {f.name}
-              </button>
-            ))}
-          </div>
-
-          {loadingDiagram && (
-            <div style={{ textAlign: 'center', padding: '80px 0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              <span className="loading-dot" /> Gerando diagrama...
-            </div>
-          )}
-
-          {diagram && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', alignItems: 'start' }}>
-              <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-                <img
-                  src={`data:${diagram.mime_type};base64,${diagram.image_base64}`}
-                  alt={diagram.formation}
-                  style={{ width: '100%', display: 'block' }}
-                />
-              </div>
-              <div className="card">
-                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '12px' }}>
-                  {diagram.formation}
-                </h2>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-                  {diagram.description}
-                </p>
-                <div style={{ marginTop: '20px', padding: '12px', background: 'var(--bg-field)', borderRadius: 'var(--radius)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                  ● Círculos = Ataque &nbsp; ▲ Triângulos = Defesa
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Tab: Formações por Time */}
+      {activeTab === 'diagrams' && <FormationExplorer />}
 
       {/* Tab: Upload */}
       {activeTab === 'upload' && (

@@ -88,10 +88,12 @@ export default function FormationExplorer() {
       {/* Ataque | Defesa */}
       <div style={{ display: 'flex', gap: '8px' }}>
         <button onClick={() => pickSide('offense')}
+          aria-pressed={side === 'offense'}
           className={`btn ${side === 'offense' ? 'btn-primary' : 'btn-ghost'}`}>
           <Swords size={13} /> Ataque
         </button>
         <button onClick={() => pickSide('defense')}
+          aria-pressed={side === 'defense'}
           className={`btn ${side === 'defense' ? 'btn-primary' : 'btn-ghost'}`}>
           <Shield size={13} /> Defesa
         </button>
@@ -129,6 +131,7 @@ export default function FormationExplorer() {
                 onClick={() => item.has_diagram && setSelectedTag(item.tag)}
                 disabled={!item.has_diagram}
                 title={item.has_diagram ? undefined : 'Sem diagrama pra essa categoria'}
+                aria-pressed={active?.tag === item.tag}
                 className={`btn ${active?.tag === item.tag ? 'btn-primary' : 'btn-ghost'}`}
                 style={{ fontSize: '0.72rem', opacity: item.has_diagram ? 1 : 0.45 }}>
                 {item.label}
@@ -141,7 +144,7 @@ export default function FormationExplorer() {
 
           {/* Diagrama + stats */}
           {active && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', alignItems: 'start' }}>
+            <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', alignItems: 'start' }}>
               <div className="card" style={{ padding: 0, overflow: 'hidden', minHeight: '300px' }}>
                 {loadingDiagram && (
                   <div style={{ textAlign: 'center', padding: '120px 0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
