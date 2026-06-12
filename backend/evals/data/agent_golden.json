@@ -1,0 +1,14 @@
+[
+  {"id": "stats_kc", "question": "Quais são as estatísticas de EPA do Kansas City Chiefs?", "expected_tools": ["get_team_stats"], "expected_facts": ["EPA"]},
+  {"id": "stats_buf", "question": "Como está o ataque do Buffalo Bills em EPA nesta temporada?", "expected_tools": ["get_team_stats"], "expected_facts": ["EPA|ataque"]},
+  {"id": "matchup_kc_buf", "question": "Quem é favorito num jogo entre Chiefs e Bills?", "expected_tools": ["predict_matchup"], "expected_facts": ["probabilidade|%|favorit"]},
+  {"id": "matchup_phi_dal", "question": "Se Eagles e Cowboys se enfrentarem, quem tem mais chance de vencer?", "expected_tools": ["predict_matchup"], "expected_facts": ["probabilidade|%|chance"]},
+  {"id": "hotseat_nyj", "question": "O quarterback do New York Jets está em risco de perder a posição?", "expected_tools": ["check_qb_hot_seat"], "expected_facts": ["EPA|berlinda|risco|seguro"]},
+  {"id": "hotseat_nyg", "question": "Como está a situação do QB do Giants? Ele está na berlinda?", "expected_tools": ["check_qb_hot_seat"], "expected_facts": ["EPA|berlinda|alerta|seguro"]},
+  {"id": "conceito_epa", "question": "Me explica o que é EPA no futebol americano", "expected_tools": ["search_nfl_knowledge"], "expected_facts": ["pontos esperados|expected points"]},
+  {"id": "conceito_cover2", "question": "O que é uma defesa Cover 2?", "expected_tools": ["search_nfl_knowledge"], "expected_facts": ["safet|zona|profund"]},
+  {"id": "rankings_geral", "question": "Quais são os melhores times da liga agora?", "expected_tools": ["get_team_rankings"], "expected_facts": []},
+  {"id": "rankings_ataque", "question": "Mostra o ranking dos melhores ataques da NFL", "expected_tools": ["get_team_rankings"], "expected_facts": ["EPA|ataque"]},
+  {"id": "multi_stats_matchup", "question": "Compara as estatísticas de Kansas City e Buffalo e me diz quem venceria um confronto entre eles", "expected_tools": ["get_team_stats", "predict_matchup"], "expected_facts": ["probabilidade|%|vence"]},
+  {"id": "multi_conceito_ranking", "question": "O que é EPA ofensivo e qual time tem o melhor da liga?", "expected_tools": ["search_nfl_knowledge", "get_team_rankings"], "expected_facts": ["EPA"]}
+]

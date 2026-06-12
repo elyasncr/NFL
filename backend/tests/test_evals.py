@@ -45,6 +45,7 @@ def test_tool_match():
     assert tool_match(["get_team_stats"], ["predict_matchup"]) is False
     assert tool_match([], ["predict_matchup"]) is False
     assert tool_match(["a", "b"], ["a", "b"]) is True
+    assert tool_match([], []) is True  # vacuamente verdadeiro — dataset impede esse caso
 
 
 # ─── agregação ───
@@ -75,3 +76,45 @@ def test_parse_judge_clamp():
     assert parse_judge_response('{"score": 9}')["score"] == 5
     assert parse_judge_response('{"score": 0}')["score"] == 1
     assert parse_judge_response('{"score": 3.7}')["score"] == 3
+
+
+import json
+import re
+from pathlib import Path
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "evals" / "data"
+
+
+# ─── golden datasets: validação estrutural (sem rede) ───
+
+def test_rag_golden_valido():
+    from rag.knowledge_base import NFL_DOCUMENTS
+    doc_ids = {d["id"] for d in NFL_DOCUMENTS}
+    items = json.loads((DATA_DIR / "rag_golden.json").read_text(encoding="utf-8"))
+    assert len(items) >= 25
+    seen = set()
+    for item in items:
+        assert item["id"] not in seen, f"id duplicado: {item['id']}"
+        seen.add(item["id"])
+        assert item["question"].strip()
+        assert item["expected_doc_ids"], f"{item['id']} sem expected_doc_ids"
+        assert set(item["expected_doc_ids"]) <= doc_ids, f"{item['id']}: doc_id inexistente"
+        assert item["expected_facts"], f"{item['id']} sem expected_facts"
+        for fact in item["expected_facts"]:
+            re.compile(fact)  # regex inválido explode aqui
+
+
+def test_agent_golden_valido():
+    from agent.tools import AGENT_TOOLS
+    valid_tools = {t["function"]["name"] for t in AGENT_TOOLS}
+    items = json.loads((DATA_DIR / "agent_golden.json").read_text(encoding="utf-8"))
+    assert len(items) >= 10
+    seen = set()
+    for item in items:
+        assert item["id"] not in seen
+        seen.add(item["id"])
+        assert item["question"].strip()
+        assert item["expected_tools"], f"{item['id']} sem expected_tools"
+        assert set(item["expected_tools"]) <= valid_tools, f"{item['id']}: tool inexistente"
+        for fact in item.get("expected_facts", []):
+            re.compile(fact)
