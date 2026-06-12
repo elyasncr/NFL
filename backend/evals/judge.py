@@ -30,7 +30,7 @@ Rubrica: 5 = fiel, correta e completa; 3 = parcialmente correta ou incompleta; 1
 Responda SOMENTE com JSON neste formato: {{"score": <1-5>, "justificativa": "<uma frase>"}}"""
 
 
-def parse_judge_response(text) -> dict | None:
+def parse_judge_response(text: str | None) -> dict | None:
     """JSON do judge → dict validado (score com clamp 1-5), ou None."""
     try:
         data = json.loads(text)
@@ -50,9 +50,9 @@ def parse_judge_response(text) -> dict | None:
 async def judge_answer(question: str, context: str, answer: str) -> dict | None:
     """Nota 1-5 via Ollama (temp 0, format json). None se falhar após 1 retry."""
     prompt = JUDGE_PROMPT.format(question=question, context=context, answer=answer)
-    for _ in range(2):  # 1 tentativa + 1 retry (judge pode devolver JSON inválido)
-        try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        for _ in range(2):  # 1 tentativa + 1 retry (JSON inválido OU erro transiente)
+            try:
                 resp = await client.post(
                     f"{settings.ollama_base_url}/api/chat",
                     json={
@@ -67,6 +67,6 @@ async def judge_answer(question: str, context: str, answer: str) -> dict | None:
                 parsed = parse_judge_response(resp.json()["message"]["content"])
                 if parsed:
                     return parsed
-        except (httpx.HTTPError, KeyError):
-            return None
+            except (httpx.HTTPError, KeyError):
+                continue
     return None
