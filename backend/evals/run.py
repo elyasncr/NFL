@@ -69,6 +69,83 @@ def run_retrieval(items: list[dict]) -> dict:
     }
 
 
+# ─── Camada 2: respostas RAG (fact coverage + judge) ───
+
+async def run_rag(items: list[dict], use_judge: bool) -> dict:
+    from rag.ingest import search_knowledge
+    from rag.retriever import generate_rag_response
+    from evals.judge import judge_answer
+
+    per_item = []
+    for item in items:
+        try:
+            resp = await generate_rag_response(item["question"])
+            answer = resp["answer"]
+            coverage = round(fact_coverage(answer, item["expected_facts"]), 3)
+            judge = None
+            if use_judge:
+                # Contexto completo (não o excerpt) pro judge avaliar fidelidade
+                docs = search_knowledge(item["question"], n_results=3)
+                context = "\n\n".join(f"[{d['metadata']['title']}]\n{d['content']}" for d in docs)
+                judge = await judge_answer(item["question"], context, answer)
+            per_item.append({
+                "id": item["id"],
+                "fact_coverage": coverage,
+                "judge_score": judge["score"] if judge else None,
+                "judge_note": judge["justificativa"] if judge else None,
+            })
+            print(f"  · {item['id']}: coverage {coverage}" + (f", judge {judge['score']}" if judge else ""))
+        except Exception as e:  # noqa: BLE001
+            per_item.append({"id": item["id"], "error": str(e)})
+            print(f"  · {item['id']}: ERRO {e}")
+    ok = [r for r in per_item if "error" not in r]
+    return {
+        "summary": {
+            "items": len(per_item),
+            "errors": len(per_item) - len(ok),
+            "fact_coverage": mean([r["fact_coverage"] for r in ok]),
+            "judge_score": mean([r["judge_score"] for r in ok]),
+        },
+        "per_item": per_item,
+    }
+
+
+# ─── Camada 3: agente (tool accuracy) ───
+
+async def run_agent_eval(items: list[dict]) -> dict:
+    from agent.nfl_agent import run_agent
+
+    per_item = []
+    for item in items:
+        try:
+            resp = await run_agent(item["question"])
+            tools_used = resp.get("tools_used", [])
+            matched = tool_match(tools_used, item["expected_tools"])
+            per_item.append({
+                "id": item["id"],
+                "tool_match": matched,
+                "expected_tools": item["expected_tools"],
+                "tools_used": tools_used,
+                "iterations": resp.get("iterations"),
+                "fact_coverage": round(fact_coverage(resp.get("answer", ""), item.get("expected_facts", [])), 3),
+            })
+            print(f"  · {item['id']}: tools {'OK' if matched else 'FALHOU'} ({tools_used})")
+        except Exception as e:  # noqa: BLE001
+            per_item.append({"id": item["id"], "error": str(e)})
+            print(f"  · {item['id']}: ERRO {e}")
+    ok = [r for r in per_item if "error" not in r]
+    return {
+        "summary": {
+            "items": len(per_item),
+            "errors": len(per_item) - len(ok),
+            "tool_accuracy": mean([r["tool_match"] for r in ok]),
+            "avg_iterations": mean([r["iterations"] for r in ok]),
+            "fact_coverage": mean([r["fact_coverage"] for r in ok]),
+        },
+        "per_item": per_item,
+    }
+
+
 # ─── Relatórios ───
 
 def build_markdown(results: dict, timestamp: str) -> str:
@@ -140,9 +217,17 @@ def main() -> None:
         print(f"[eval] Retrieval: {len(rag_items)} perguntas...")
         results["retrieval"] = run_retrieval(rag_items)
 
-    # Camadas 2 e 3 entram na Task 5
-    if (run_all or args.rag or args.agent) and "run_rag" not in globals():
-        print("[eval] Camadas RAG/agente ainda não implementadas (Task 5).")
+    if run_all or args.rag or args.agent:
+        if not ollama_available():
+            print("[eval] ⚠️ Ollama indisponível — camadas RAG/agente puladas. "
+                  "Suba com `ollama serve` e rode de novo.")
+        else:
+            if run_all or args.rag:
+                print(f"[eval] Respostas RAG: {len(rag_items)} perguntas (judge: {not args.no_judge})...")
+                results["rag"] = asyncio.run(run_rag(rag_items, use_judge=not args.no_judge))
+            if run_all or args.agent:
+                print(f"[eval] Agente: {len(agent_items)} perguntas...")
+                results["agent"] = asyncio.run(run_agent_eval(agent_items))
 
     markdown = write_reports(results)
     print("\n" + markdown)
