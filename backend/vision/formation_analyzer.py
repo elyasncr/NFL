@@ -589,7 +589,7 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
 
     for player in template.get("offense", []):
         color = _player_color(player, "offense", team_colors if side == "offense" else None)
-        circle = Circle((player["x"], player["y"]), radius=0.5, color=color,
+        circle = Circle((player["x"], player["y"]), radius=0.5, facecolor=color,
                         zorder=5, linewidth=1.5, edgecolor="white")
         ax.add_patch(circle)
         ax.text(player["x"], player["y"], player["pos"], ha="center", va="center",
@@ -601,7 +601,7 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
             [[player["x"], player["y"] + 0.55],
              [player["x"] - 0.5, player["y"] - 0.35],
              [player["x"] + 0.5, player["y"] - 0.35]],
-            color=color, zorder=5, linewidth=1.5, edgecolor="white")
+            facecolor=color, zorder=5, linewidth=1.5, edgecolor="white")
         ax.add_patch(triangle)
         ax.text(player["x"], player["y"] + 0.05, player["pos"], ha="center", va="center",
                 color="white", fontsize=6, fontweight="bold", zorder=6)
@@ -669,10 +669,13 @@ def _team_colors(team: Optional[str]) -> Optional[dict]:
     return None
 
 
-@lru_cache(maxsize=256)
+# 512 ≈ domínio real (15 tags × 33 filtros de time × tema); PNGs ~150KB → teto ~75MB
+@lru_cache(maxsize=512)
 def generate_team_diagram(side: str, tag: str, team: Optional[str] = None,
                           theme: str = "dark") -> Optional[str]:
     """Diagrama por tag real do pbp, opcionalmente nas cores do time. Cacheado."""
+    if side not in ("offense", "defense"):
+        return None
     templates = OFFENSE_FORMATION_TEMPLATES if side == "offense" else COVERAGE_TEMPLATES
     template = templates.get(tag)
     if not template:

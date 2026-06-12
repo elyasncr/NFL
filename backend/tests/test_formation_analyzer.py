@@ -178,3 +178,7 @@ def test_template_ofensivo_renderiza(tag):
 
 def test_tag_desconhecida_retorna_none():
     assert generate_team_diagram("offense", "INEXISTENTE") is None
+
+
+def test_side_invalido_retorna_none():
+    assert generate_team_diagram("special_teams", "SHOTGUN") is None
