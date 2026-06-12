@@ -3,7 +3,10 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from vision.formation_analyzer import parse_defense_personnel, classify_db_package, analyze_team_formations
+from vision.formation_analyzer import (
+    parse_defense_personnel, classify_db_package, analyze_team_formations,
+    generate_team_diagram, OFFENSE_FORMATION_TEMPLATES,
+)
 
 
 # ─── parse_defense_personnel ───
@@ -150,3 +153,23 @@ def test_coverage_insight_fallback_so_outras():
     insight = _coverage_insight(items)
     assert "mais usada" in insight
     assert "Melhor EPA" not in insight
+
+
+# ─── diagramas ───
+
+OFFENSE_TAGS = ["SHOTGUN", "UNDER CENTER", "SINGLEBACK", "PISTOL",
+                "EMPTY", "I_FORM", "JUMBO", "WILDCAT"]
+
+
+def test_todas_tags_ofensivas_tem_template():
+    assert sorted(OFFENSE_FORMATION_TEMPLATES.keys()) == sorted(OFFENSE_TAGS)
+
+
+@pytest.mark.parametrize("tag", OFFENSE_TAGS)
+def test_template_ofensivo_renderiza(tag):
+    img = generate_team_diagram("offense", tag)
+    assert img is not None and len(img) > 1000   # base64 de PNG real
+
+
+def test_tag_desconhecida_retorna_none():
+    assert generate_team_diagram("offense", "INEXISTENTE") is None

@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 import base64
 import io
+from functools import lru_cache
 from typing import Optional
 import matplotlib
 matplotlib.use('Agg')  # Backend sem display
@@ -94,8 +95,128 @@ COVERAGE_LABELS = {
 SMALL_SAMPLE_THRESHOLD = 20
 
 # Placeholders — preenchidos com templates reais nas Tasks 5 e 6.
-OFFENSE_FORMATION_TEMPLATES: dict = {}
 COVERAGE_TEMPLATES: dict = {}
+
+
+def _ol(extra_left: bool = False) -> list:
+    """Linha ofensiva padrão de 5 (+ tackle extra opcional pro Jumbo)."""
+    ol = [
+        {"x": 0, "y": 0, "pos": "C", "unit": "ol", "color": "#1565c0"},
+        {"x": -1.3, "y": 0, "pos": "LG", "unit": "ol", "color": "#1565c0"},
+        {"x": 1.3, "y": 0, "pos": "RG", "unit": "ol", "color": "#1565c0"},
+        {"x": -2.7, "y": 0, "pos": "LT", "unit": "ol", "color": "#1565c0"},
+        {"x": 2.7, "y": 0, "pos": "RT", "unit": "ol", "color": "#1565c0"},
+    ]
+    if extra_left:
+        ol.append({"x": -4.0, "y": 0, "pos": "OT", "unit": "ol", "color": "#1565c0"})
+    return ol
+
+
+OFFENSE_FORMATION_TEMPLATES = {
+    "SHOTGUN": {
+        "label": "Shotgun",
+        "description": "QB recebe o snap a ~5 jardas da bola. Base do ataque moderno: "
+                       "facilita a leitura da defesa e o passe rápido. 3 WRs, 1 TE, 1 RB.",
+        "offense": _ol() + [
+            {"x": 0, "y": -4.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": 1.5, "y": -4.5, "pos": "RB", "unit": "back", "color": "#43a047"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": -6, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": -4.5, "y": -1, "pos": "Slot", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+    "UNDER CENTER": {
+        "label": "Under Center",
+        "description": "QB colado no center com dois backs divididos atrás (pro set). "
+                       "Desenho clássico: forte na corrida e no play action.",
+        "offense": _ol() + [
+            {"x": 0, "y": -1.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": -1.8, "y": -4.2, "pos": "HB", "unit": "back", "color": "#43a047"},
+            {"x": 1.8, "y": -3.6, "pos": "FB", "unit": "back", "color": "#00acc1"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": -6, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+    "SINGLEBACK": {
+        "label": "Singleback",
+        "description": "Um único RB fundo atrás do QB under center. Formação equilibrada: "
+                       "corre e passa do mesmo desenho, difícil de antecipar.",
+        "offense": _ol() + [
+            {"x": 0, "y": -1.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": 0, "y": -5, "pos": "RB", "unit": "back", "color": "#43a047"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": -6, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": -4.5, "y": -1, "pos": "Slot", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+    "PISTOL": {
+        "label": "Pistol",
+        "description": "Híbrido: QB a ~3 jardas (mais raso que shotgun) com o RB logo atrás. "
+                       "Mantém a corrida norte-sul viva sem abrir mão da leitura de passe.",
+        "offense": _ol() + [
+            {"x": 0, "y": -3, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": 0, "y": -5.2, "pos": "RB", "unit": "back", "color": "#43a047"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": -6, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 4.5, "y": -1, "pos": "Slot", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+    "EMPTY": {
+        "label": "Empty",
+        "description": "Backfield vazio: QB sozinho e cinco recebedores abertos. Força a defesa "
+                       "a cobrir o campo todo, mas deixa o QB vulnerável ao blitz.",
+        "offense": _ol() + [
+            {"x": 0, "y": -4.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": -6, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": -4.5, "y": -1, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 4.5, "y": -1, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+        ],
+    },
+    "I_FORM": {
+        "label": "I-Formation",
+        "description": "FB e RB em fila atrás do QB under center — o 'I'. Clássica de corrida: "
+                       "o FB abre o buraco e o RB segue. Ótima pra play action.",
+        "offense": _ol() + [
+            {"x": 0, "y": -1.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": 0, "y": -3.5, "pos": "FB", "unit": "back", "color": "#00acc1"},
+            {"x": 0, "y": -5.5, "pos": "RB", "unit": "back", "color": "#43a047"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": -6, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+    "JUMBO": {
+        "label": "Jumbo",
+        "description": "Pacote de força pra curta distância e goal line: linha extra, 2 TEs, "
+                       "FB e RB. Todo mundo sabe que vem corrida — e mesmo assim funciona.",
+        "offense": _ol(extra_left=True) + [
+            {"x": 0, "y": -1.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": 0, "y": -3.2, "pos": "FB", "unit": "back", "color": "#00acc1"},
+            {"x": 0, "y": -5, "pos": "RB", "unit": "back", "color": "#43a047"},
+            {"x": -5.2, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": 4, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+    "WILDCAT": {
+        "label": "Wildcat",
+        "description": "O snap vai direto pro RB; o QB abre como recebedor. Aposta total "
+                       "na corrida com um bloqueador a mais e elemento surpresa.",
+        "offense": _ol() + [
+            {"x": 0, "y": -4.5, "pos": "RB", "unit": "back", "color": "#43a047"},
+            {"x": -7, "y": -0.5, "pos": "QB", "unit": "qb", "color": "#e53935"},
+            {"x": 3, "y": -1.2, "pos": "Jet", "unit": "back", "color": "#00acc1"},
+            {"x": 3.8, "y": 0, "pos": "TE", "unit": "te", "color": "#fb8c00"},
+            {"x": 6.5, "y": 0.5, "pos": "WR", "unit": "wr", "color": "#8e24aa"},
+        ],
+    },
+}
 
 
 # ─────────────────────────────────────────
@@ -432,111 +553,80 @@ FORMATION_TEMPLATES = {
 }
 
 
-def generate_formation_diagram(formation_name: str, theme: str = "dark") -> str:
-    """
-    Gera um diagrama de campo com as posições dos jogadores.
-    Retorna a imagem como string base64 (PNG).
+def _player_color(player: dict, side: str, team_colors: Optional[dict]) -> str:
+    """Cor do jogador: didática (default) ou cores do time quando informadas."""
+    if team_colors and player.get("unit"):
+        if side == "offense":
+            return team_colors["secondary"] if player["unit"] == "qb" else team_colors["primary"]
+        if player["unit"] == "db":
+            return team_colors["secondary"]
+        if player["unit"] in ("dl", "lb"):
+            return team_colors["primary"]
+    return player["color"]
 
-    Args:
-        formation_name: Nome da formação (chave de FORMATION_TEMPLATES)
-        theme: 'dark' ou 'light'
 
-    Returns:
-        String base64 da imagem PNG
-    """
-    template = FORMATION_TEMPLATES.get(formation_name)
-    if not template:
-        return None
-
-    # Configuração visual
+def _render_diagram(template: dict, title: str, theme: str = "dark",
+                    team_colors: Optional[dict] = None, side: str = "offense") -> str:
+    """Renderiza um template (offense/defense) num campo matplotlib → PNG base64."""
     bg_color = "#0b0f1a" if theme == "dark" else "#f1f8e9"
     field_color = "#0d2e0d" if theme == "dark" else "#2e7d32"
-    line_color = "#ffffff" if theme == "dark" else "#000000"
     text_color = "white" if theme == "dark" else "black"
 
     fig, ax = plt.subplots(1, 1, figsize=(12, 8))
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(field_color)
-
-    # Dimensões do campo (zona visível)
     ax.set_xlim(-10, 10)
     ax.set_ylim(-8, 12)
     ax.set_aspect("equal")
 
-    # Linhas do campo
-    # Linha de scrimmage
     ax.axhline(y=0, color="white", linewidth=2, alpha=0.8, linestyle="-")
     ax.text(-9.5, 0.3, "SCRIMMAGE", color="white", fontsize=7, alpha=0.6)
-
-    # Linhas de 5 jardas (atrás e frente)
     for y in [-5, 5, 10]:
         ax.axhline(y=y, color="white", linewidth=0.5, alpha=0.3, linestyle="--")
-
-    # Hash marks
     for y in range(-7, 12):
         ax.plot([-1, -0.7], [y, y], color="white", linewidth=0.5, alpha=0.3)
         ax.plot([0.7, 1], [y, y], color="white", linewidth=0.5, alpha=0.3)
 
-    # Desenha os jogadores ofensivos
     for player in template.get("offense", []):
-        circle = Circle(
-            (player["x"], player["y"]),
-            radius=0.5,
-            color=player["color"],
-            zorder=5,
-            linewidth=1.5,
-            edgecolor="white",
-        )
+        color = _player_color(player, "offense", team_colors if side == "offense" else None)
+        circle = Circle((player["x"], player["y"]), radius=0.5, color=color,
+                        zorder=5, linewidth=1.5, edgecolor="white")
         ax.add_patch(circle)
-        ax.text(
-            player["x"], player["y"],
-            player["pos"],
-            ha="center", va="center",
-            color="white", fontsize=7, fontweight="bold",
-            zorder=6,
-        )
+        ax.text(player["x"], player["y"], player["pos"], ha="center", va="center",
+                color="white", fontsize=7, fontweight="bold", zorder=6)
 
-    # Desenha os jogadores defensivos (se houver)
     for player in template.get("defense", []):
-        # Defesa: triângulo para diferenciar
+        color = _player_color(player, "defense", team_colors if side == "defense" else None)
         triangle = plt.Polygon(
-            [
-                [player["x"], player["y"] + 0.55],
-                [player["x"] - 0.5, player["y"] - 0.35],
-                [player["x"] + 0.5, player["y"] - 0.35],
-            ],
-            color=player["color"],
-            zorder=5,
-            linewidth=1.5,
-            edgecolor="white",
-        )
+            [[player["x"], player["y"] + 0.55],
+             [player["x"] - 0.5, player["y"] - 0.35],
+             [player["x"] + 0.5, player["y"] - 0.35]],
+            color=color, zorder=5, linewidth=1.5, edgecolor="white")
         ax.add_patch(triangle)
-        ax.text(
-            player["x"], player["y"] + 0.05,
-            player["pos"],
-            ha="center", va="center",
-            color="white", fontsize=6, fontweight="bold",
-            zorder=6,
-        )
+        ax.text(player["x"], player["y"] + 0.05, player["pos"], ha="center", va="center",
+                color="white", fontsize=6, fontweight="bold", zorder=6)
 
-    # Título e informação
-    ax.set_title(
-        formation_name,
-        color="white" if theme == "dark" else "black",
-        fontsize=14,
-        fontweight="bold",
-        pad=10,
-    )
+    ax.set_title(title, color=text_color, fontsize=14, fontweight="bold", pad=10)
 
-    # Legenda
-    if template.get("defense"):
+    if team_colors:
+        if side == "offense":
+            legend_elements = [
+                mpatches.Patch(color=team_colors["primary"], label="Ataque"),
+                mpatches.Patch(color=team_colors["secondary"], label="QB"),
+            ]
+        else:
+            legend_elements = [
+                mpatches.Patch(color=team_colors["primary"], label="Front 7"),
+                mpatches.Patch(color=team_colors["secondary"], label="Secundária (DBs)"),
+                mpatches.Patch(color="#5c6470", label="Ataque (referência)"),
+            ]
+    elif template.get("defense"):
         legend_elements = [
-            mpatches.Patch(color="#1565c0", label="OL (Ataque)"),
-            mpatches.Patch(color="#e53935", label="QB"),
-            mpatches.Patch(color="#8e24aa", label="WR"),
             mpatches.Patch(color="#d32f2f", label="DL (Defesa)"),
+            mpatches.Patch(color="#f57c00", label="LB"),
             mpatches.Patch(color="#2e7d32", label="CB"),
             mpatches.Patch(color="#1b5e20", label="Safety"),
+            mpatches.Patch(color="#5c6470", label="Ataque (referência)"),
         ]
     else:
         legend_elements = [
@@ -547,26 +637,49 @@ def generate_formation_diagram(formation_name: str, theme: str = "dark") -> str:
             mpatches.Patch(color="#fb8c00", label="TE"),
         ]
 
-    ax.legend(
-        handles=legend_elements,
-        loc="lower right",
-        fontsize=7,
-        framealpha=0.3,
-        facecolor=bg_color,
-        labelcolor=text_color,
-    )
-
+    ax.legend(handles=legend_elements, loc="lower right", fontsize=7,
+              framealpha=0.3, facecolor=bg_color, labelcolor=text_color)
     ax.axis("off")
     plt.tight_layout()
 
-    # Converte para base64
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches="tight", dpi=120, facecolor=bg_color)
     buf.seek(0)
     img_base64 = base64.b64encode(buf.read()).decode("utf-8")
     plt.close(fig)
-
     return img_base64
+
+
+def generate_formation_diagram(formation_name: str, theme: str = "dark") -> Optional[str]:
+    """Endpoint legado: renderiza um template do FORMATION_TEMPLATES original."""
+    template = FORMATION_TEMPLATES.get(formation_name)
+    if not template:
+        return None
+    return _render_diagram(template, formation_name, theme=theme)
+
+
+def _team_colors(team: Optional[str]) -> Optional[dict]:
+    """Cores oficiais do time (lazy import pra evitar custo no boot)."""
+    if not team:
+        return None
+    from ml.teams_info import get_teams_info
+    for t in get_teams_info():
+        if t["abbr"] == team.upper():
+            return {"primary": t["color"], "secondary": t["color2"]}
+    return None
+
+
+@lru_cache(maxsize=256)
+def generate_team_diagram(side: str, tag: str, team: Optional[str] = None,
+                          theme: str = "dark") -> Optional[str]:
+    """Diagrama por tag real do pbp, opcionalmente nas cores do time. Cacheado."""
+    templates = OFFENSE_FORMATION_TEMPLATES if side == "offense" else COVERAGE_TEMPLATES
+    template = templates.get(tag)
+    if not template:
+        return None
+    title = template["label"] + (f" — {team.upper()}" if team else "")
+    return _render_diagram(template, title, theme=theme,
+                           team_colors=_team_colors(team), side=side)
 
 
 # ─────────────────────────────────────────
