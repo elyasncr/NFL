@@ -49,6 +49,15 @@ export interface PlayoffGame {
   away_score: number | null
   date: string
 }
+export interface MatchupDiagram {
+  off_team: string
+  def_team: string
+  season: number
+  formation: { tag: string; label: string; usage_pct: number; epa_mean: number }
+  coverage: { tag: string; label: string; usage_pct: number; epa_allowed: number }
+  image_base64: string
+  mime_type: string
+}
 
 export const nflApi = {
   getAllTeams: () => api.get<TeamStats[]>('/ml/teams').then(r => r.data),
@@ -69,4 +78,6 @@ export const nflApi = {
     api.get<TeamFormationsResponse>('/vision/team-formations', { params: { ...(team ? { team } : {}), ...(season ? { season } : {}) } }).then(r => r.data),
   getTeamFormationDiagram: (side: 'offense' | 'defense', tag: string, team?: string) =>
     api.get<TeamFormationDiagram>(`/vision/team-formations/diagram/${side}/${encodeURIComponent(tag)}`, { params: team ? { team } : {} }).then(r => r.data),
+  getMatchupDiagram: (offTeam: string, defTeam: string) =>
+    api.get<MatchupDiagram>(`/vision/matchup-diagram/${offTeam}/${defTeam}`).then(r => r.data),
 }
