@@ -201,3 +201,24 @@ def test_template_cobertura_renderiza(tag):
 @pytest.mark.parametrize("tag", COVERAGE_TAGS)
 def test_template_cobertura_tem_11_defensores(tag):
     assert len(COVERAGE_TEMPLATES[tag]["defense"]) == 11
+
+
+# ─── cores do time ───
+
+def test_diagrama_com_cores_do_time(monkeypatch):
+    """Com team, o PNG muda (cores aplicadas). Mock evita rede do teams_info."""
+    from vision import formation_analyzer as fa
+    monkeypatch.setattr(
+        fa, "_team_colors",
+        lambda team: {"primary": "#ff0000", "secondary": "#00ff00"} if team else None,
+    )
+    fa.generate_team_diagram.cache_clear()
+    img_team = fa.generate_team_diagram("offense", "SHOTGUN", team="KC")
+    img_plain = fa.generate_team_diagram("offense", "SHOTGUN", team=None)
+    assert img_team and img_plain
+    assert img_team != img_plain
+
+    img_cov = fa.generate_team_diagram("defense", "COVER_2", team="KC")
+    img_cov_plain = fa.generate_team_diagram("defense", "COVER_2", team=None)
+    assert img_cov != img_cov_plain
+    fa.generate_team_diagram.cache_clear()
