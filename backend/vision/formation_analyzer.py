@@ -368,10 +368,12 @@ def analyze_formations_from_pbp(pbp: pd.DataFrame, team: Optional[str] = None) -
     if plays.empty:
         return {"error": "Dados insuficientes para análise de formações."}
 
+    total_snaps = len(plays)
+
     # Usa a tag real do NGS (≈74% das jogadas) em vez de derivar de shotgun/no_huddle
     plays = plays[plays["offense_formation"].notna()].copy()
     if plays.empty:
-        return {"error": "Dados insuficientes para análise de formações."}
+        return {"error": "Nenhuma jogada com tag de formação nesse filtro. Temporada sem dados NGS?"}
     plays["formation"] = plays["offense_formation"].map(
         lambda t: TAG_LABELS.get(t, str(t).title())
     )
@@ -410,6 +412,7 @@ def analyze_formations_from_pbp(pbp: pd.DataFrame, team: Optional[str] = None) -
 
     return {
         "team": team or "Liga Toda",
+        "total_snaps": total_snaps,
         "total_plays": total_plays,
         "formations": formation_stats.to_dict(orient="records"),
         "chart": chart_data,

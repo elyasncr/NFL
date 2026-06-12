@@ -232,3 +232,4 @@ def test_epa_por_formacao_usa_tags_reais(pbp_ofensivo):
     # Antes: rótulos derivados ("Shotgun (Passe)"). Agora: labels das tags reais.
     assert set(result["chart"]["labels"]) == {"Shotgun", "Pistol"}
     assert result["total_plays"] == 40   # só jogadas com tag
+    assert result["total_snaps"] == 45   # inclui as 5 sem tag
