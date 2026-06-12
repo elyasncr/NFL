@@ -278,8 +278,8 @@ def _analyze_defense(pbp: pd.DataFrame, team: Optional[str]) -> dict:
     cov = def_plays[def_plays["defense_coverage_type"].notna()].copy()
     items = []
     if not cov.empty:
-        cov["cov_group"] = cov["defense_coverage_type"].map(
-            lambda t: t if t in COVERAGE_LABELS else "OUTRAS"
+        cov["cov_group"] = cov["defense_coverage_type"].where(
+            cov["defense_coverage_type"].isin(COVERAGE_LABELS), "OUTRAS"
         )
         cgrouped = (
             cov.groupby("cov_group")
@@ -311,6 +311,12 @@ def _analyze_defense(pbp: pd.DataFrame, team: Optional[str]) -> dict:
     def _pct(name: str) -> float:
         return round(float((packages == name).sum()) / snaps * 100, 1) if snaps else 0.0
 
+    base_pct = _pct("BASE")
+    nickel_pct = _pct("NICKEL")
+    dime_pct = _pct("DIME")
+    # OUTROS como resíduo: evita soma ≠ 100% por arredondamento independente
+    other_pct = round(100.0 - base_pct - nickel_pct - dime_pct, 1) if snaps else 0.0
+
     box = def_plays["defenders_in_box"].dropna()
     rushers = def_plays.loc[def_plays["pass"] == 1, "number_of_pass_rushers"].dropna()
 
@@ -321,10 +327,10 @@ def _analyze_defense(pbp: pd.DataFrame, team: Optional[str]) -> dict:
             "insight": _coverage_insight(items),
         },
         "personnel": {
-            "base_pct": _pct("BASE"),
-            "nickel_pct": _pct("NICKEL"),
-            "dime_pct": _pct("DIME"),
-            "other_pct": _pct("OUTROS"),
+            "base_pct": base_pct,
+            "nickel_pct": nickel_pct,
+            "dime_pct": dime_pct,
+            "other_pct": other_pct,
             "avg_box": round(float(box.mean()), 1) if len(box) else None,
             "blitz_rate": round(float((rushers >= 5).mean()) * 100, 1) if len(rushers) else None,
             "snaps": snaps,
