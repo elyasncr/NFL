@@ -674,7 +674,10 @@ def _player_color(player: dict, side: str, team_colors: Optional[dict]) -> str:
 
 
 def _render_diagram(template: dict, title: str, theme: str = "dark",
-                    team_colors: Optional[dict] = None, side: str = "offense") -> str:
+                    offense_colors: Optional[dict] = None,
+                    defense_colors: Optional[dict] = None,
+                    offense_label: str = "Ataque",
+                    defense_label: str = "Front 7") -> str:
     """Renderiza um template (offense/defense) num campo matplotlib → PNG base64."""
     bg_color = "#0b0f1a" if theme == "dark" else "#f1f8e9"
     field_color = "#0d2e0d" if theme == "dark" else "#2e7d32"
@@ -696,7 +699,7 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
         ax.plot([0.7, 1], [y, y], color="white", linewidth=0.5, alpha=0.3)
 
     for player in template.get("offense", []):
-        color = _player_color(player, "offense", team_colors if side == "offense" else None)
+        color = _player_color(player, "offense", offense_colors)
         circle = Circle((player["x"], player["y"]), radius=0.5, facecolor=color,
                         zorder=5, linewidth=1.5, edgecolor="white")
         ax.add_patch(circle)
@@ -704,7 +707,7 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
                 color="white", fontsize=7, fontweight="bold", zorder=6)
 
     for player in template.get("defense", []):
-        color = _player_color(player, "defense", team_colors if side == "defense" else None)
+        color = _player_color(player, "defense", defense_colors)
         triangle = plt.Polygon(
             [[player["x"], player["y"] + 0.55],
              [player["x"] - 0.5, player["y"] - 0.35],
@@ -716,34 +719,36 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
 
     ax.set_title(title, color=text_color, fontsize=14, fontweight="bold", pad=10)
 
-    if team_colors:
-        if side == "offense":
+    legend_elements = []
+    if offense_colors:
+        legend_elements += [
+            mpatches.Patch(color=offense_colors["primary"], label=offense_label),
+            mpatches.Patch(color=offense_colors["secondary"], label="QB"),
+        ]
+    if defense_colors:
+        legend_elements += [
+            mpatches.Patch(color=defense_colors["primary"], label=defense_label),
+            mpatches.Patch(color=defense_colors["secondary"], label="Secundária (DBs)"),
+        ]
+        if not offense_colors:
+            legend_elements.append(mpatches.Patch(color="#5c6470", label="Ataque (referência)"))
+    if not legend_elements:
+        if template.get("defense"):
             legend_elements = [
-                mpatches.Patch(color=team_colors["primary"], label="Ataque"),
-                mpatches.Patch(color=team_colors["secondary"], label="QB"),
+                mpatches.Patch(color="#d32f2f", label="DL (Defesa)"),
+                mpatches.Patch(color="#f57c00", label="LB"),
+                mpatches.Patch(color="#2e7d32", label="CB"),
+                mpatches.Patch(color="#1b5e20", label="Safety"),
+                mpatches.Patch(color="#5c6470", label="Ataque (referência)"),
             ]
         else:
             legend_elements = [
-                mpatches.Patch(color=team_colors["primary"], label="Front 7"),
-                mpatches.Patch(color=team_colors["secondary"], label="Secundária (DBs)"),
-                mpatches.Patch(color="#5c6470", label="Ataque (referência)"),
+                mpatches.Patch(color="#1565c0", label="OL"),
+                mpatches.Patch(color="#e53935", label="QB"),
+                mpatches.Patch(color="#43a047", label="RB"),
+                mpatches.Patch(color="#8e24aa", label="WR"),
+                mpatches.Patch(color="#fb8c00", label="TE"),
             ]
-    elif template.get("defense"):
-        legend_elements = [
-            mpatches.Patch(color="#d32f2f", label="DL (Defesa)"),
-            mpatches.Patch(color="#f57c00", label="LB"),
-            mpatches.Patch(color="#2e7d32", label="CB"),
-            mpatches.Patch(color="#1b5e20", label="Safety"),
-            mpatches.Patch(color="#5c6470", label="Ataque (referência)"),
-        ]
-    else:
-        legend_elements = [
-            mpatches.Patch(color="#1565c0", label="OL"),
-            mpatches.Patch(color="#e53935", label="QB"),
-            mpatches.Patch(color="#43a047", label="RB"),
-            mpatches.Patch(color="#8e24aa", label="WR"),
-            mpatches.Patch(color="#fb8c00", label="TE"),
-        ]
 
     ax.legend(handles=legend_elements, loc="lower right", fontsize=7,
               framealpha=0.3, facecolor=bg_color, labelcolor=text_color)
@@ -789,8 +794,10 @@ def generate_team_diagram(side: str, tag: str, team: Optional[str] = None,
     if not template:
         return None
     title = template["label"] + (f" — {team.upper()}" if team else "")
-    return _render_diagram(template, title, theme=theme,
-                           team_colors=_team_colors(team), side=side)
+    colors = _team_colors(team)
+    if side == "offense":
+        return _render_diagram(template, title, theme=theme, offense_colors=colors)
+    return _render_diagram(template, title, theme=theme, defense_colors=colors)
 
 
 def compose_matchup_template(off_tag: str, cov_tag: str) -> Optional[dict]:

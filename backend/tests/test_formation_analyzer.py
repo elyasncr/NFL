@@ -246,3 +246,15 @@ def test_compose_matchup_template():
 def test_compose_matchup_template_tag_invalida():
     assert compose_matchup_template("NOPE", "COVER_3") is None
     assert compose_matchup_template("SHOTGUN", "NOPE") is None
+
+
+def test_render_combinado_com_cores_dos_dois_times():
+    from vision import formation_analyzer as fa
+    template = fa.compose_matchup_template("SHOTGUN", "COVER_2")
+    img = fa._render_diagram(
+        template, "Shotgun (NE) × Cover 2 (SEA)",
+        offense_colors={"primary": "#002244", "secondary": "#C60C30"},
+        defense_colors={"primary": "#002244", "secondary": "#69BE28"},
+        offense_label="Ataque NE", defense_label="Front 7 SEA",
+    )
+    assert img and len(img) > 1000
