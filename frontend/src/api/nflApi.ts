@@ -20,6 +20,16 @@ export interface AgentResponse { answer: string; steps: AgentStep[]; tools_used:
 export interface FormationData { team: string; total_plays: number; chart: { labels: string[]; epa: number[]; usage: number[]; plays: number[]; success_rate: number[] }; insight: string }
 export interface FormationDiagram { formation: string; description: string; image_base64: string; mime_type: string }
 export interface ImageAnalysis { circles_detected: number; formation_estimate: string; confidence: string; spatial_analysis?: { horizontal_spread: number; vertical_spread: number }; player_positions?: Array<{ x: number; y: number; radius: number }>; note: string }
+export interface TeamFormationItem { tag: string; label: string; usage_pct: number; plays: number; epa_mean: number; success_rate: number; has_diagram: boolean; small_sample: boolean }
+export interface CoverageItem { tag: string; label: string; usage_pct: number; plays: number; epa_allowed: number; success_rate_allowed: number; has_diagram: boolean; small_sample: boolean }
+export interface DefensePersonnelSummary { base_pct: number; nickel_pct: number; dime_pct: number; other_pct: number; avg_box: number | null; blitz_rate: number | null; snaps: number }
+export interface TeamFormationsResponse {
+  team: string
+  season: number
+  offense: { total_plays: number; tagged_plays: number; formations: TeamFormationItem[]; insight: string }
+  defense: { coverages: { tagged_plays: number; items: CoverageItem[]; insight: string }; personnel: DefensePersonnelSummary }
+}
+export interface TeamFormationDiagram { tag: string; side: 'offense' | 'defense'; formation: string; description: string; image_base64: string; mime_type: string }
 export interface TeamInfo {
   abbr: string
   name: string
@@ -55,4 +65,8 @@ export const nflApi = {
   analyzeImage: (file: File) => { const fd = new FormData(); fd.append('file', file); return api.post<ImageAnalysis>('/vision/analyze-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data) },
   getTeamsInfo: () => api.get<TeamInfo[]>('/ml/teams-info').then(r => r.data),
   getPlayoffs: (season: number) => api.get<PlayoffGame[]>(`/ml/playoffs/${season}`).then(r => r.data),
+  getTeamFormations: (team?: string, season?: number) =>
+    api.get<TeamFormationsResponse>('/vision/team-formations', { params: { ...(team ? { team } : {}), ...(season ? { season } : {}) } }).then(r => r.data),
+  getTeamFormationDiagram: (side: 'offense' | 'defense', tag: string, team?: string) =>
+    api.get<TeamFormationDiagram>(`/vision/team-formations/diagram/${side}/${encodeURIComponent(tag)}`, { params: team ? { team } : {} }).then(r => r.data),
 }
