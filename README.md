@@ -39,9 +39,13 @@ Projeto de portfólio combinando **Machine Learning**, **LLM + RAG**, **Agentes 
 - Fallback automático sem LLM via keyword matching.
 
 ### ✅ Módulo 4 — Visão Computacional
-- Análise de EPA por formação a partir de play-by-play (~37k jogadas/temporada).
-- Diagramas de campo estilizados (matplotlib) para 8+ formações clássicas.
+- **Formações por Time**: selecione um time e veja as formações ofensivas reais (Shotgun, Pistol, Under Center...) e as coberturas defensivas (Cover 0–6, 2-Man) que ele usou na temporada — % de uso, EPA e diagramas de campo nas cores do time.
+- Resumo do personnel defensivo: % de snaps em Nickel/Dime/Base, defensores na caixa e taxa de blitz.
+- Análise de EPA por formação com as tags reais do play-by-play (NGS, ~74% das jogadas).
+- Diagramas de campo estilizados (matplotlib) para 8 formações ofensivas + 7 coberturas.
 - Detecção de jogadores em imagens com **OpenCV (HoughCircles)**.
+
+> 📝 Nota de dado: a partir de 2023 o NGS público só classifica SHOTGUN / UNDER CENTER / PISTOL. A temporada 2022 tem a taxonomia completa (Empty, I-Form, Singleback, Jumbo, Wildcat) — use o seletor de temporada pra explorar.
 
 ---
 
@@ -76,6 +80,7 @@ nfl-analytics/
         │   ├── team/           # TeamCard, TeamHero, TeamChip, ChampionCard
         │   ├── tribune/        # TribuneHero, PlayoffsTimeline, TribuneFooter
         │   ├── chat/           # TribuneChatWidget (RAG + Agent)
+        │   ├── vision/         # FormationExplorer (formações por time)
         │   └── ui/             # Skeleton, ErrorState, EmptyState, Abbr (glossário)
         ├── pages/              # Tribune, Dashboard, Matchup, Encyclopedia, Agent, Vision
         └── styles/global.css   # Design system light pro + responsivo ≤768px
@@ -224,6 +229,12 @@ curl -s "http://localhost:8000/vision/formations/data" \
 
 # Filtrado por time
 curl -s "http://localhost:8000/vision/formations/data?team=KC" | python -m json.tool
+
+# Formações + coberturas de um time específico (com % de uso e EPA)
+curl -s "http://localhost:8000/vision/team-formations?team=KC&season=2025" | python -m json.tool
+
+# Diagrama de uma cobertura nas cores do time (PNG base64)
+curl -s "http://localhost:8000/vision/team-formations/diagram/defense/COVER_3?team=KC"
 ```
 
 ---
