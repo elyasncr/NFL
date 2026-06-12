@@ -1,0 +1,344 @@
+{
+  "timestamp": "2026-06-12 22:37",
+  "retrieval": {
+    "summary": {
+      "items": 30,
+      "errors": 0,
+      "hit_at_1": 0.567,
+      "hit_at_3": 0.867,
+      "mrr": 0.697
+    },
+    "per_item": [
+      {
+        "id": "epa_definicao",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "analytics_epa",
+          "ml_win_prediction",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "epa_zero",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "analytics_epa",
+          "analytics_turnover_points",
+          "rules_scoring"
+        ]
+      },
+      {
+        "id": "epa_vs_jardas",
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "mrr": 0.25,
+        "retrieved": [
+          "rules_penalties",
+          "ml_win_prediction",
+          "analytics_turnover_points"
+        ]
+      },
+      {
+        "id": "cpoe_definicao",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.333,
+        "retrieved": [
+          "ml_win_prediction",
+          "positions_defense",
+          "analytics_cpoe"
+        ]
+      },
+      {
+        "id": "cpoe_qb",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.5,
+        "retrieved": [
+          "formations_offense",
+          "analytics_cpoe",
+          "positions_offense"
+        ]
+      },
+      {
+        "id": "success_definicao",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "analytics_success_rate",
+          "analytics_cpoe",
+          "rules_basic_01"
+        ]
+      },
+      {
+        "id": "air_yards",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "analytics_success_rate",
+          "positions_defense",
+          "rules_basic_01"
+        ]
+      },
+      {
+        "id": "turnover_valor",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "analytics_turnover_points",
+          "rules_basic_01",
+          "rules_scoring"
+        ]
+      },
+      {
+        "id": "field_position",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "analytics_turnover_points",
+          "rules_basic_01",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "downs_sistema",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_downs",
+          "formations_offense",
+          "formations_defense"
+        ]
+      },
+      {
+        "id": "downs_quarto",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_downs",
+          "rules_scoring",
+          "analytics_turnover_points"
+        ]
+      },
+      {
+        "id": "downs_first",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_downs",
+          "rules_basic_01",
+          "formations_offense"
+        ]
+      },
+      {
+        "id": "jogo_duracao",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.333,
+        "retrieved": [
+          "ml_win_prediction",
+          "formations_offense",
+          "rules_basic_01"
+        ]
+      },
+      {
+        "id": "jogo_objetivo",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_basic_01",
+          "formations_offense",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "jogo_posse",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_basic_01",
+          "analytics_turnover_points",
+          "rules_downs"
+        ]
+      },
+      {
+        "id": "penalidade_holding",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_penalties",
+          "positions_defense",
+          "formations_offense"
+        ]
+      },
+      {
+        "id": "penalidade_pi",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.5,
+        "retrieved": [
+          "positions_offense",
+          "rules_penalties",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "pontuacao_td",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_basic_01",
+          "rules_scoring",
+          "analytics_turnover_points"
+        ]
+      },
+      {
+        "id": "pontuacao_fg",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "rules_basic_01",
+          "rules_scoring",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "pontuacao_2pt",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.333,
+        "retrieved": [
+          "rules_basic_01",
+          "analytics_turnover_points",
+          "rules_scoring"
+        ]
+      },
+      {
+        "id": "formacao_shotgun",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "formations_offense",
+          "positions_defense",
+          "rules_basic_01"
+        ]
+      },
+      {
+        "id": "formacao_corrida",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.333,
+        "retrieved": [
+          "positions_defense",
+          "ml_win_prediction",
+          "formations_offense"
+        ]
+      },
+      {
+        "id": "defesa_cover2",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.333,
+        "retrieved": [
+          "positions_defense",
+          "ml_win_prediction",
+          "formations_defense"
+        ]
+      },
+      {
+        "id": "defesa_blitz",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.5,
+        "retrieved": [
+          "positions_defense",
+          "formations_defense",
+          "rules_penalties"
+        ]
+      },
+      {
+        "id": "posicao_qb",
+        "hit_at_1": false,
+        "hit_at_3": true,
+        "mrr": 0.5,
+        "retrieved": [
+          "formations_offense",
+          "positions_offense",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "posicao_ol",
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "mrr": 0.0,
+        "retrieved": [
+          "ml_win_prediction",
+          "rules_downs",
+          "positions_defense"
+        ]
+      },
+      {
+        "id": "posicao_cb",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "positions_defense",
+          "formations_defense",
+          "formations_offense"
+        ]
+      },
+      {
+        "id": "sb_lx_campeao",
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "mrr": 0.0,
+        "retrieved": [
+          "teams_context_2024",
+          "ml_win_prediction",
+          "formations_defense"
+        ]
+      },
+      {
+        "id": "temporada_2025",
+        "hit_at_1": false,
+        "hit_at_3": false,
+        "mrr": 0.0,
+        "retrieved": [
+          "teams_context_2024",
+          "ml_win_prediction",
+          "formations_defense"
+        ]
+      },
+      {
+        "id": "ml_predicao",
+        "hit_at_1": true,
+        "hit_at_3": true,
+        "mrr": 1.0,
+        "retrieved": [
+          "ml_win_prediction",
+          "ml_rag_agent",
+          "rules_downs"
+        ]
+      }
+    ]
+  }
+}

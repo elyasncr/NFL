@@ -24,3 +24,7 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+docs-vault/
+
+backend/evals/results/history/
