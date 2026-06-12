@@ -25,6 +25,6 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-docs-vault/
+docs-vault
 
 backend/evals/results/history/
