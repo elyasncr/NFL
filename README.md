@@ -10,7 +10,7 @@ Projeto de portfólio combinando **Machine Learning**, **LLM + RAG**, **Agentes 
 
 - **NFL Tribune** (`/`) — landing estilo revista esportiva: manchete do Super Bowl LX (NE 13 × SEA 29), destaques da temporada, bracket dos playoffs.
 - **Dashboard** (`/dashboard`) — campeões da temporada, ranking dos 32 times, análise do quarterback do seu time.
-- **Confronto** (`/matchup`) — compara dois times com previsão da IA, duelos ataque×defesa e radar de eficiência.
+- **Confronto** (`/matchup`) — compara dois times com previsão da IA, duelos ataque×defesa, radar de eficiência e simulação de formações (ataque típico × cobertura típica, nas cores dos times).
 - **Agente IA** (`/agent`) — IA com ReAct + tool calling que busca dados ao vivo enquanto raciocina.
 - **Enciclopédia** (`/encyclopedia`) — glossário curado de métricas, táticas e regras.
 - **Visão CV** (`/vision`) — análise de formações via play-by-play + diagramas + OpenCV pra imagens.

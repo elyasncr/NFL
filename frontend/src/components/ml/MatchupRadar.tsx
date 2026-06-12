@@ -12,6 +12,7 @@ import { pickAwayColor } from '../../utils/teamColors'
 import Skeleton from '../ui/Skeleton'
 import ErrorState from '../ui/ErrorState'
 import Abbr from '../ui/Abbr'
+import MatchupFormationDuel from './MatchupFormationDuel'
 
 const NFL_TEAMS = [
   'ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE',
@@ -471,6 +472,8 @@ export default function MatchupRadar() {
           </div>
         </div>
       )}
+
+      <MatchupFormationDuel homeTeam={homeTeam} awayTeam={awayTeam} />
 
       {/* Radar Chart */}
       {isLoading && (
