@@ -2,6 +2,7 @@
 import pytest
 
 from evals.metrics import hit_at_k, mrr, fact_coverage, tool_match, mean
+from evals.judge import parse_judge_response
 
 
 # ─── retrieval ───
@@ -54,3 +55,23 @@ def test_mean_ignora_none():
     assert mean([True, False]) == 0.5    # bools viram 0/1
     assert mean([]) is None
     assert mean([None]) is None
+
+
+# ─── judge: parse defensivo ───
+
+def test_parse_judge_valido():
+    result = parse_judge_response('{"score": 4, "justificativa": "Fiel ao contexto."}')
+    assert result == {"score": 4, "justificativa": "Fiel ao contexto."}
+
+
+def test_parse_judge_invalido():
+    assert parse_judge_response("não é json") is None
+    assert parse_judge_response(None) is None
+    assert parse_judge_response('{"justificativa": "sem score"}') is None
+    assert parse_judge_response('{"score": "alto"}') is None
+
+
+def test_parse_judge_clamp():
+    assert parse_judge_response('{"score": 9}')["score"] == 5
+    assert parse_judge_response('{"score": 0}')["score"] == 1
+    assert parse_judge_response('{"score": 3.7}')["score"] == 3
