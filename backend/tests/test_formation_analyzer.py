@@ -314,3 +314,35 @@ def test_resolve_defense_colors():
     assert resolved2["primary"] == "#448aff"                   # fallback azul de dados
 
     assert _resolve_defense_colors(None, sea) == sea           # sem cores do ataque → intacto
+
+
+def test_render_diagram_thread_safe():
+    """Renders concorrentes não podem produzir PNG em branco.
+    matplotlib.pyplot tem estado global não-thread-safe; FastAPI roda endpoints
+    sync num threadpool, então 2+ diagramas em paralelo (página de Confronto)
+    corrompiam o canvas um do outro e o lru_cache fixava o branco. Reproduz com
+    ThreadPoolExecutor e exige que nenhum PNG saia monocromático (em branco)."""
+    import base64
+    import io
+    from concurrent.futures import ThreadPoolExecutor
+
+    from PIL import Image
+
+    from vision import formation_analyzer as fa
+
+    template = fa.compose_matchup_template("SHOTGUN", "COVER_2")
+
+    def render(i):
+        return fa._render_diagram(
+            template, f"t{i}",
+            offense_colors={"primary": "#E31837", "secondary": "#FFB612"},
+            defense_colors={"primary": "#69BE28", "secondary": "#002244"},
+        )
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        imgs = list(pool.map(render, range(24)))
+
+    for b64 in imgs:
+        img = Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
+        assert not all(lo == hi for lo, hi in img.getextrema()), \
+            "PNG em branco — render não é thread-safe"

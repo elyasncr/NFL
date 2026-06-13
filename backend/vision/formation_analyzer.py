@@ -23,6 +23,7 @@ import matplotlib
 matplotlib.use('Agg')  # Backend sem display
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.figure import Figure
 from matplotlib.patches import Circle, Rectangle, FancyArrowPatch
 import pandas as pd
 
@@ -682,12 +683,18 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
                     offense_watermark: Optional[str] = None,
                     defense_watermark: Optional[str] = None) -> str:
     """Renderiza um template (offense e/ou defense) num campo matplotlib → PNG base64.
-    offense_colors/defense_colors pintam cada lado de forma independente (campo combinado)."""
+    offense_colors/defense_colors pintam cada lado de forma independente (campo combinado).
+
+    Usa a API orientada a objeto (Figure/add_subplot/fig.savefig) em vez de pyplot:
+    pyplot tem estado global não-thread-safe, e o backend renderiza diagramas em
+    paralelo (FastAPI roda endpoints sync num threadpool). Com Figure isolada por
+    chamada, renders concorrentes não corrompem o canvas um do outro."""
     bg_color = "#0b0f1a" if theme == "dark" else "#f1f8e9"
     field_color = "#0d2e0d" if theme == "dark" else "#2e7d32"
     text_color = "white" if theme == "dark" else "black"
 
-    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+    fig = Figure(figsize=(12, 8))
+    ax = fig.add_subplot(1, 1, 1)
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(field_color)
     ax.set_xlim(-10, 10)
@@ -726,7 +733,7 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
 
     for player in template.get("defense", []):
         color = _player_color(player, "defense", defense_colors)
-        triangle = plt.Polygon(
+        triangle = mpatches.Polygon(
             [[player["x"], player["y"] + 0.55],
              [player["x"] - 0.5, player["y"] - 0.35],
              [player["x"] + 0.5, player["y"] - 0.35]],
@@ -771,13 +778,12 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
     ax.legend(handles=legend_elements, loc="lower right", fontsize=7,
               framealpha=0.3, facecolor=bg_color, labelcolor=text_color)
     ax.axis("off")
-    plt.tight_layout()
+    fig.tight_layout()
 
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches="tight", dpi=120, facecolor=bg_color)
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=120, facecolor=bg_color)
     buf.seek(0)
     img_base64 = base64.b64encode(buf.read()).decode("utf-8")
-    plt.close(fig)
     return img_base64
 
 
