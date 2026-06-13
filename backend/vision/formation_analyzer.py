@@ -12,6 +12,7 @@ O approach combina:
 - Geração de visualizações sintéticas (campo com jogadores)
 - Análise de imagens reais (detecção de padrões)
 """
+import colorsys
 import cv2
 import numpy as np
 import base64
@@ -677,7 +678,9 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
                     offense_colors: Optional[dict] = None,
                     defense_colors: Optional[dict] = None,
                     offense_label: str = "Ataque",
-                    defense_label: str = "Front 7") -> str:
+                    defense_label: str = "Front 7",
+                    offense_watermark: Optional[str] = None,
+                    defense_watermark: Optional[str] = None) -> str:
     """Renderiza um template (offense e/ou defense) num campo matplotlib → PNG base64.
     offense_colors/defense_colors pintam cada lado de forma independente (campo combinado)."""
     bg_color = "#0b0f1a" if theme == "dark" else "#f1f8e9"
@@ -698,6 +701,15 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
     for y in range(-7, 12):
         ax.plot([-1, -0.7], [y, y], color="white", linewidth=0.5, alpha=0.3)
         ax.plot([0.7, 1], [y, y], color="white", linewidth=0.5, alpha=0.3)
+
+    if offense_watermark:
+        ax.text(-9.4, -7.4, offense_watermark,
+                color=(offense_colors or {}).get("primary", "white"),
+                fontsize=18, fontweight="bold", alpha=0.9, zorder=4)
+    if defense_watermark:
+        ax.text(-9.4, 10.9, defense_watermark,
+                color=(defense_colors or {}).get("primary", "white"),
+                fontsize=18, fontweight="bold", alpha=0.9, zorder=4)
 
     for player in template.get("offense", []):
         color = _player_color(player, "offense", offense_colors)
@@ -783,6 +795,41 @@ def _team_colors(team: Optional[str]) -> Optional[dict]:
     return None
 
 
+def _hex_to_hsl(hex_color: str) -> tuple[float, float, float]:
+    h = hex_color.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    hue, light, sat = colorsys.rgb_to_hls(r, g, b)
+    return hue * 360, sat * 100, light * 100
+
+
+def _colors_conflict(c1: str, c2: str) -> bool:
+    """Mesma heurística do frontend (utils/teamColors.ts): hue próximo + saturação
+    e lightness comparáveis = visualmente indistinguíveis no campo."""
+    h1, s1, l1 = _hex_to_hsl(c1)
+    h2, s2, l2 = _hex_to_hsl(c2)
+    if s1 < 15 and s2 < 15:
+        return abs(l1 - l2) < 20
+    if abs(s1 - s2) > 40:
+        return False
+    hue_d = abs(h1 - h2) % 360
+    hue_d = 360 - hue_d if hue_d > 180 else hue_d
+    return hue_d < 30 and abs(l1 - l2) < 30
+
+
+def _resolve_defense_colors(off_colors: Optional[dict], def_colors: Optional[dict]) -> Optional[dict]:
+    """Se a primária da defesa conflita com a do ataque (ex. NE × SEA, ambos navy),
+    a defesa troca pra secundária; se ambas conflitam, cai no azul de dados."""
+    if not off_colors or not def_colors:
+        return def_colors
+    if not _colors_conflict(off_colors["primary"], def_colors["primary"]):
+        return def_colors
+    if not _colors_conflict(off_colors["primary"], def_colors["secondary"]):
+        return {"primary": def_colors["secondary"], "secondary": def_colors["primary"]}
+    return {"primary": "#448aff", "secondary": def_colors["secondary"]}
+
+
 # 512 ≈ domínio real (15 tags × 33 filtros de time × tema); PNGs ~150KB → teto ~75MB
 @lru_cache(maxsize=512)
 def generate_team_diagram(side: str, tag: str, team: Optional[str] = None,
@@ -821,12 +868,16 @@ def generate_matchup_diagram(off_tag: str, cov_tag: str, off_team: str, def_team
     off_label = OFFENSE_FORMATION_TEMPLATES[off_tag]["label"]
     cov_label = COVERAGE_TEMPLATES[cov_tag]["label"]
     title = f"{off_label} ({off_team}) × {cov_label} ({def_team})"
+    off_colors = _team_colors(off_team)
+    def_colors = _resolve_defense_colors(off_colors, _team_colors(def_team))
     return _render_diagram(
         template, title, theme=theme,
-        offense_colors=_team_colors(off_team),
-        defense_colors=_team_colors(def_team),
+        offense_colors=off_colors,
+        defense_colors=def_colors,
         offense_label=f"Ataque {off_team}",
         defense_label=f"Front 7 {def_team}",
+        offense_watermark=off_team,
+        defense_watermark=def_team,
     )
 
 

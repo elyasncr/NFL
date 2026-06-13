@@ -272,3 +272,32 @@ def test_render_combinado_com_cores_dos_dois_times():
         offense_label="Ataque NE", defense_label="Front 7 SEA",
     )
     assert img and len(img) > 1000
+
+
+# ─── conflito de cores no confronto ───
+
+def test_colors_conflict():
+    from vision.formation_analyzer import _colors_conflict
+    assert _colors_conflict("#002244", "#002244") is True      # navy × navy (NE × SEA)
+    assert _colors_conflict("#002244", "#0B2265") is True      # azuis escuros próximos
+    assert _colors_conflict("#E31837", "#002244") is False     # vermelho × navy
+    assert _colors_conflict("#222222", "#1a1a1a") is True      # quase-pretos
+    assert _colors_conflict("#E31837", "#FFB612") is False     # vermelho × dourado
+
+
+def test_resolve_defense_colors():
+    from vision.formation_analyzer import _resolve_defense_colors
+    off = {"primary": "#002244", "secondary": "#C60C30"}       # NE
+    sea = {"primary": "#002244", "secondary": "#69BE28"}       # SEA: primária conflita
+    resolved = _resolve_defense_colors(off, sea)
+    assert resolved["primary"] == "#69BE28"                    # troca pra secundária
+    assert resolved["secondary"] == "#002244"
+
+    kc = {"primary": "#E31837", "secondary": "#FFB612"}        # sem conflito com navy
+    assert _resolve_defense_colors(off, kc) == kc
+
+    navy_navy = {"primary": "#002244", "secondary": "#0B2265"} # ambas conflitam
+    resolved2 = _resolve_defense_colors(off, navy_navy)
+    assert resolved2["primary"] == "#448aff"                   # fallback azul de dados
+
+    assert _resolve_defense_colors(None, sea) == sea           # sem cores do ataque → intacto
