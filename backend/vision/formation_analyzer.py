@@ -694,6 +694,11 @@ def _render_diagram(template: dict, title: str, theme: str = "dark",
     ax.set_ylim(-8, 12)
     ax.set_aspect("equal")
 
+    # Confronto (dois lados coloridos): tinge cada metade do campo com a cor do time
+    if offense_colors and defense_colors:
+        ax.axhspan(-8, 0, facecolor=offense_colors["primary"], alpha=0.12, zorder=0.5)
+        ax.axhspan(0, 12, facecolor=defense_colors["primary"], alpha=0.12, zorder=0.5)
+
     ax.axhline(y=0, color="white", linewidth=2, alpha=0.8, linestyle="-")
     ax.text(-9.5, 0.3, "SCRIMMAGE", color="white", fontsize=7, alpha=0.6)
     for y in [-5, 5, 10]:

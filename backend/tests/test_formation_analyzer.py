@@ -262,6 +262,19 @@ def test_generate_matchup_diagram(monkeypatch):
     fa.generate_matchup_diagram.cache_clear()
 
 
+def test_render_combinado_divide_o_campo(monkeypatch):
+    """Com os dois lados coloridos, o campo ganha tintura por metade — o PNG muda."""
+    from vision import formation_analyzer as fa
+    template = fa.compose_matchup_template("SHOTGUN", "COVER_2")
+    kwargs = dict(
+        offense_colors={"primary": "#E31837", "secondary": "#FFB612"},
+        defense_colors={"primary": "#69BE28", "secondary": "#002244"},
+    )
+    img_combined = fa._render_diagram(template, "t", **kwargs)
+    img_plain = fa._render_diagram(template, "t")
+    assert img_combined and img_plain and img_combined != img_plain
+
+
 def test_render_combinado_com_cores_dos_dois_times():
     from vision import formation_analyzer as fa
     template = fa.compose_matchup_template("SHOTGUN", "COVER_2")
